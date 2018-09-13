@@ -1,0 +1,359 @@
+---
+title: "Phenotypic Analyses"
+author: "Sara Michele Schaal"
+date: "5/9/2018"
+output: html_document
+---
+
+Set working directory - this will not work. Rmd files default the working directory to be where the rmd file is saved. However I want it to be in the parent directory. Cannot get it to read that as the working directory. Even though it prints out that it is set at that working directory.
+
+```{r}
+# Load data
+  # Morphometrics + Individual Metadata 
+  masterData <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/morphPlusMetadata20180628.csv")
+  colnames(masterData)[2:3] <- c("CollectionDate", "CollectionSite")
+  masterData$CollectionDate <- as.Date(as.character(masterData$CollectionDate), format = ("%Y%m%d"))
+  masterData$WeightTotal <- masterData$WeightTotal*1000
+  masterData$ColorType <- NA
+
+  # Add Red or Olive Based on RGR
+  for(i in 1:nrow(masterData)){
+    if(masterData$RedGreenRatio[i] >= 1.3){
+      masterData$ColorType[i] <- "Red"
+    } else {
+      masterData$ColorType[i] <- "Olive"
+    }
+  }
+
+  # Morphometric Spawning Assignment Data
+  dataAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/SamplingSpawningAssignment.csv")
+  noRed <- subset(masterData, subset = masterData$ColorType != "Red")
+  onlyRed <- subset(masterData, subset = masterData$ColorType == "Red")
+  onlyRed$Spawning <- "Red"
+  noRedAssignSpawn <- data.frame(noRed, dataAssignSpawn$Spawning)
+  colnames(noRedAssignSpawn)[37] <- "Spawning"
+  masterDataAssign <- rbind(noRedAssignSpawn, onlyRed)
+  colnames(masterData)[1] <- "SampleID"
+  
+  
+  # Otolith Spawning Assignment Data
+  otolAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtolithSpawningAssignment.csv")
+  colnames(otolAssignSpawn)[12] <- "OtolSeason"
+  otolAssignSpawn <- subset(otolAssignSpawn, select = -X)
+  
+  all.data.temp <- merge(dataAssignSpawn[, c(20:23)], masterData, by = "SampleID", all = TRUE)
+  all.data <- merge(all.data.temp, otolAssignSpawn, by = "SampleID", all = TRUE)
+```
+
+
+```{r}
+
+all.data$FinalSpawningAssignment <- NA
+all.data$Spawning <- as.character(all.data$Spawning)
+all.data$OtolSeason <- as.character(all.data$OtolSeason)
+df.unknown <- NULL
+for(i in 1:nrow(all.data)){
+  if(all.data$Spawning[i] == all.data$OtolSeason[i] && !is.na(all.data$Spawning[i]) && !is.na(all.data$OtolSeason[i])){
+    all.data$FinalSpawningAssignment[i] <- all.data$Spawning[i]
+  } else if(all.data$Spawning[i] != all.data$OtolSeason[i] && !is.na(all.data$Spawning[i]) && !is.na(all.data$OtolSeason[i])){
+    all.data$FinalSpawningAssignment[i] <- "unknown"
+    df.unknown <- rbind(df.unknown, all.data[i,])
+  } else if(!is.na(all.data$Spawning[i]) && !is.na(all.data$OtolSeason[i])){
+    all.data$FinalSpawningAssignment[i] <- NA
+  }
+}
+df.unknown[, c(2:4, 48:49)] 
+(nrow(all.data)-nrow(df.unknown))/nrow(all.data)*100
+
+write.csv(df.unknown, "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/unknownIndv.csv")
+
+```
+
+```{r}
+# von Bertalanffy Growth Curve
+install.packages("FSA")
+install.packages("nlstools")
+install.packages("FSATeach")
+library(FSA)
+library(FSAdata)
+library(FSATeach)
+library(nlstools)
+VGBFdata <- masterDataAssign[!is.na(masterDataAssign$Age),]
+
+
+RedTnot <- vbStarts(TotalLength~Age,data=VGBFdata[VGBFdata$Spawning == "Red",])
+SpringTnot <- vbStarts(TotalLength~Age,data=VGBFdata[VGBFdata$Spawning == "Spring",])
+WinterTnot <- vbStarts(TotalLength~Age,data=VGBFdata[VGBFdata$Spawning == "Winter",])
+unlist(RedTnot)
+unlist(SpringTnot)
+unlist(WinterTnot)
+RedParam <- list(Linf = 28.6, K = 0.29, t0 = -0.98)
+
+VBGCmod <- TotalLength~Linf*(1-exp(-K*(Age-t0)))
+
+fitRed <- nls(VBGCmod,data=VGBFdata[VGBFdata$Spawning == "Red",],start=RedTnot)
+fitSpring <- nls(VBGCmod,data=VGBFdata[VGBFdata$Spawning == "Spring",],start=SpringParam)
+fitWinter <- nls(VBGCmod,data=VGBFdata[VGBFdata$Spawning == "Winter",],start=WinterParam)
+fitPlot(fitRed,xlab="Age",ylab="Total Length (inches)",main="", 
+        col.pt = "firebrick", col.mdl = "firebrick", ylim = c(9,30), xlim = c(0,6))
+points(TotalLength~Age, col = "darkolivegreen4", pch = 19, 
+     data = VGBFdata[VGBFdata$Spawning == "Spring",])
+curve(TotalLength ~ 39.5092 * (1 - exp(-0.1464 * (Age - -1.635))), data.frame(Age=x))
+par(mfrow = c(1,1))
+plot(TotalLength~Age, col = "firebrick", pch = 21, 
+     data = VGBFdata[VGBFdata$Spawning == "Red",],
+     xlim = c(0,6), ylim = c(0,30))
+curve(predict(fitRed, data.frame(Age = x)))
+
+
+ages <- c(0,6)
+( vbF <- vbFuns("Francis") )
+ springF <- vbStarts(TotalLength~Age,data=VGBFdata[VGBFdata$Spawning == "Spring",],type="Francis",tFrancis=ages,methEV="poly") 
+ winterF <- vbStarts(TotalLength~Age,data=VGBFdata[VGBFdata$Spawning == "Winter",],type="Francis",tFrancis=ages,methEV="poly") 
+ fitspringF <- nls(TotalLength~vbF(Age,L1,L2,L3,t1=ages),data=VGBFdata[VGBFdata$Spawning == "Spring",],start=springF)
+ fitwinterF <- nls(TotalLength~vbF(Age,L1,L2,L3,t1=ages),data=VGBFdata[VGBFdata$Spawning == "Winter",],start=winterF)
+
+
+ plot(TotalLength~Age, col = "darkolivegreen4", pch = 19, 
+     data = VGBFdata[VGBFdata$Spawning == "Spring",], xlim = c(0,6), ylim = c(9,30), 
+     ylab = "Total Length (inches)")
+ curve(vbF(x,L1=coef(fitspringF),t1=ages),from=1,to=5,lwd=2,col = "darkolivegreen4", add=TRUE)
+ plot(TotalLength~Age, col = "cornflowerblue", pch = 19,
+      data = VGBFdata[VGBFdata$Spawning == "Winter",], xlim = c(0,6), ylim = c(10,30),
+      ylab = "Total Length (inches)")
+
+curve(vbF(x,L1=coef(fitwinterF),t1=ages),from=1,to=5,lwd=2,col="cornflowerblue",add=TRUE)
+
+boxplot(TotalLength~Age, ylim = c(9,33), xlim = c(0.5, 5+0.5) , data = masterDataAssign,
+        boxfill=rgb(1, 1, 1, alpha=1), border=rgb(1, 1, 1, alpha=1), 
+        ylab = "Total Length (inches)", xlab = "Age", bty = "l") #invisible boxes
+boxplot(TotalLength~Age, data = VGBFdata[VGBFdata$Spawning == "Red",], xaxt = "n", add = TRUE, 
+        boxfill = "firebrick", boxwex = 0.25, at = 1:5 -0.25)
+boxplot(TotalLength~Age, data = VGBFdata[VGBFdata$Spawning == "Spring",], xaxt = "n", add = TRUE, 
+        boxfill = "darkolivegreen4", boxwex = 0.25, at = 2:4)
+boxplot(TotalLength~Age, data = VGBFdata[VGBFdata$Spawning == "Spring",], xaxt = "n", add = TRUE, 
+        boxfill = "cornflowerblue", boxwex = 0.25, at = 3:5+0.25)
+legend("topleft", legend = c("Red", "Spring", "Winter"), fill = c("firebrick", "darkolivegreen4", "cornflowerblue"))
+```
+
+
+#GSI
+
+```{r}
+# Gonadosomatic Index
+masterDataAssign$GonSomIndex <- (masterDataAssign$WeightGonad/masterDataAssign$WeightTotal)*100
+
+#data manipulation
+  GonSomData <- masterDataAssign[!is.na(masterDataAssign$GonSomIndex),]
+  daterange <- c(min(GonSomData$CollectionDate), max(GonSomData$CollectionDate))
+  
+  #Reassign based on GSI
+  masterDataAssign[c(21,24,33,40),37] <- "Winter"
+
+#create Standard Error Function
+  SE <- function(x){
+    sd(x)/sqrt(length(x))
+    }
+
+#Calculate means and upper/lower CIs
+  #redcod
+  GSIredMean <- aggregate(GonSomIndex~CollectionDate, 
+                          data = GonSomData[GonSomData$Spawning == "Red",], FUN = mean)
+  GSIredSE <- aggregate(GonSomIndex~CollectionDate, 
+                        data = GonSomData[GonSomData$Spawning == "Red",], FUN = SE)
+  GSIredMean$CIlow <- GSIredMean$GonSomIndex - GSIredSE$GonSomIndex
+  GSIredMean$CIup <- GSIredMean$GonSomIndex + GSIredSE$GonSomIndex
+  
+  #springcod
+  GSIspringMean <- aggregate(GonSomIndex~CollectionDate, 
+                            data = GonSomData[GonSomData$Spawning == "Spring",], 
+                            FUN = mean)
+  GSIspringSE <- aggregate(GonSomIndex~CollectionDate, 
+                          data = GonSomData[GonSomData$Spawning == "Spring",], 
+                          FUN = SE)
+  GSIspringMean$CIlow <- GSIspringMean$GonSomIndex - GSIspringSE$GonSomIndex
+  GSIspringMean$CIup <- GSIspringMean$GonSomIndex + GSIspringSE$GonSomIndex
+
+  #wintercod
+  GSIwinterMean <- aggregate(GonSomIndex~CollectionDate, 
+                            data = GonSomData[GonSomData$Spawning == "Winter",], 
+                            FUN = mean)
+  GSIwinterSE <- aggregate(GonSomIndex~CollectionDate, 
+                          data = GonSomData[GonSomData$Spawning == "Winter",], 
+                          FUN = SE)
+  GSIwinterMean$CIlow <- GSIwinterMean$GonSomIndex - GSIwinterSE$GonSomIndex
+  GSIwinterMean$CIup <- GSIwinterMean$GonSomIndex + GSIwinterSE$GonSomIndex
+  
+  
+## Subset for just known winter ##
+  
+  
+## Plots ##
+  # one figure means as points plot
+  plot(GonSomIndex~CollectionDate, data = GSIredMean, pch = 19, col = "firebrick", 
+       ylim = c(0, 10), xlab = "Collection Date", ylab = "Gonadosomatic Index",
+       main = "Spawning Condition of Cod Ecotypes")
+  arrows(x0 = GSIredMean$CollectionDate, x1 = GSIredMean$CollectionDate, 
+         y0 = GSIredMean$CIlow, y1 = GSIredMean$CIup, 
+         angle = 90, code = 3, len = 0.1)
+  points(GonSomIndex~CollectionDate, data = GSIspringMean, pch = 17, 
+         col = "darkolivegreen4")
+  arrows(x0 = GSIspringMean$CollectionDate, x1 = GSIspringMean$CollectionDate, 
+         y0 = GSIspringMean$CIlow, y1 = GSIspringMean$CIup, 
+         angle = 90, code = 3, len = 0.1)
+  points(GonSomIndex~CollectionDate, data = GSIwinterMean, pch = 15, 
+         col = "cornflowerblue")
+  arrows(x0 = GSIwinterMean$CollectionDate, x1 = GSIwinterMean$CollectionDate, 
+         y0 = GSIwinterMean$CIlow, y1 = GSIwinterMean$CIup, 
+         angle = 90, code = 3, len = 0.1)
+  legend("topleft", legend = c("Red", "Spring", "Winter"), pch = c(19,17,15), 
+         col = c("firebrick", "darkolivegreen4", "cornflowerblue"))
+  
+  # two separate boxplots
+  par(mfrow = c(1,2))
+  boxplot(GonSomIndex~CollectionDate, col = "firebrick", 
+          data = GonSomData[GonSomData$ColorType == "Red",], 
+          xlab = "Date", ylab = "Gondasomatic Index")
+  boxplot(GonSomIndex~CollectionDate, col = "darkolivegreen4", 
+          data = GonSomData[GonSomData$Spawning == "Spring",])
+  boxplot(GonSomIndex~CollectionDate, col = "cornflowerblue", 
+          data = GonSomData[GonSomData$Spawning == "Winter",])
+  
+   # statistic
+  GSImodel <- lm(GonSomIndex~CollectionDate*Spawning, data = GonSomData)
+  summary(GSImodel)
+  summary(aov(GSImodel))
+  
+ 
+
+```
+
+#Condition Index
+
+```{r}
+
+  # Fultons Condition Index
+  masterDataAssign$CondIndex <- masterDataAssign$WeightTotal/(masterDataAssign$TotalLength^3)*100
+  head(masterDataAssign)
+
+  FCI <- aggregate(CondIndex~Spawning, data = masterDataAssign, FUN = mean)
+  FCI.SE <- aggregate(CondIndex~Spawning, data = masterDataAssign, FUN = SE)
+  FCI$UpCI <- FCI$CondIndex + 1.96*FCI.SE$CondIndex
+  FCI$LowCI <- FCI$CondIndex - 1.96*FCI.SE$CondIndex
+
+  bpFCI <- barplot(FCI$CondIndex, 
+                   col = c("darkolivegreen4", "cornflowerblue", "firebrick"), 
+                   ylim = c(0, 60), ylab = "Mean Condition Index", 
+                   xlab = NULL)
+  arrows(x0 = bpFCI, x1 = bpFCI, y0 = FCI$LowCI, y1 = FCI$UpCI, angle = 90, 
+         code = 3, len = 0.1)
+  
+   hist(log10(masterDataAssign$CondIndex)) # fairly normal
+   shapiro.test(log10(masterDataAssign$CondIndex)) # normal
+   FCImod <- aov(log10(CondIndex)~Spawning, data = masterDataAssign)
+   summary(LSImod)
+   FCImodTukey <- TukeyHSD(FCImod)
+   labelsFCI <- multcompLetters(FCImodTukey$Spawning[, "p adj"])$Letters
+   labelsFCI <- labelsFCI[c(3,1,2)]
+   text(x = bpLSI, y = FCI$UpCI, labelsFCI, pos = 3)
+   
+```
+
+#LSI
+
+```{r}
+## Calulations ##
+  # Liver Somatic Index Calculation
+  masterDataAssign$LivSomIndex <- (masterDataAssign$WeightLiver/masterDataAssign$WeightTotal)*100
+
+
+  # Get mean LSI for each color type
+  LSI <- aggregate(LivSomIndex~Spawning, data = masterDataAssign, FUN = mean)
+  LSI.SE <- aggregate(LivSomIndex~Spawning, data = masterDataAssign, FUN = SE)
+  LSI$UpCI <- LSI$LivSomIndex + 1.96*LSI.SE$LivSomIndex
+  LSI$LowCI <- LSI$LivSomIndex - 1.96*LSI.SE$LivSomIndex
+
+## Plot ##
+  bpLSI <- barplot(LSI$LivSomIndex, 
+                   col = c("darkolivegreen4", "cornflowerblue", "firebrick"), 
+                   ylim = c(0, 5), ylab = "Mean Hepatosomatic Index", 
+                   xlab = NULL)
+  arrows(x0 = bpLSI, x1 = bpLSI, y0 = LSI$LowCI, y1 = LSI$UpCI, angle = 90, 
+         code = 3, len = 0.1)
+ 
+  
+## Statistics ##
+ hist(masterDataAssign$LivSomIndex) # fairly normal
+ shapiro.test(masterDataAssign$LivSomIndex) # normal
+ LSImod <- aov(LivSomIndex~Spawning, data = masterDataAssign)
+ summary(LSImod)
+ LSImodTukey <- TukeyHSD(LSImod)
+ require(multcompView, quiet = TRUE)
+ labelsLSI <- multcompLetters(LSImodTukey$Spawning[, "p adj"])$Letters
+ labelsLSI <- labelsLSI[c(3,2,1)]
+ text(x = bpLSI, y = LSI$UpCI, labelsLSI, pos = 3)
+ 
+```
+
+#Gill Raker
+
+```{r}
+
+masterDataAssign$GillRakerCountMean <- (masterDataAssign$LeftGillRaker + masterDataAssign$RightGillRaker)/2
+
+# Get mean LSI for each color type
+  GRC <- aggregate(GillRakerCountMean~Spawning, data = masterDataAssign, FUN = mean)
+  GRC.SE <- aggregate(GillRakerCountMean~Spawning, data = masterDataAssign, FUN = SE)
+  GRC$UpCI <- GRC$GillRakerCountMean + 1.96*GRC.SE$GillRakerCountMean
+  GRC$LowCI <- GRC$GillRakerCountMean - 1.96*GRC.SE$GillRakerCountMean
+
+## Plot ##
+  bpGRC <- barplot(GRC$GillRakerCountMean, 
+                   col = c("darkolivegreen4", "cornflowerblue", "firebrick"), 
+                   ylim = c(0, 28), ylab = "Number of Gill Rakers", 
+                   xlab = "Ecotype",
+                   names = c("Spring", "Winter", "Red"))
+  arrows(x0 = bpGRC, x1 = bpGRC, y0 = GRC$LowCI, y1 = GRC$UpCI, angle = 90, 
+         code = 3, len = 0.1)
+
+  
+## Statistics ##
+ hist(masterDataAssign$GillRakerCountMean) # fairly normal
+ shapiro.test(masterDataAssign$GillRakerCountMean) # normal
+ GRCmod <- aov(GillRakerCountMean~Spawning, data = masterDataAssign)
+ summary(GRCmod)
+ GRCmodTukey <- TukeyHSD(GRCmod)
+ 
+ labelsGRC <- multcompLetters(GRCmodTukey$Spawning[, "p adj"])$Letters
+ labelsGRC <- labelsGRC[c(3,2,1)]
+ text(x = bpGRC, y = GRC$UpCI, labelsGRC, pos = 3)
+ 
+
+```
+
+
+# Catch Depth
+```{r}
+
+catchDepth <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/catchdepth.csv", header = FALSE)
+colnames(catchDepth) <- c("Ecotype", "Depth", "Sample", "RGR")
+catchDepth <- catchDepth[!is.na(catchDepth$Depth),]
+
+ # Add Red or Olive Based on RGR
+  for(i in 1:nrow(catchDepth)){
+    if(is.na(catchDepth$RGR[i])){
+      catchDepth$ColorType[i] <- as.character(catchDepth$Ecotype[i])
+    } else if(catchDepth$RGR[i] >= 1.3){
+      catchDepth$ColorType[i] <- "Red" 
+    } else {
+      catchDepth$ColorType[i] <- "Olive"
+    }
+  }
+catchDepth$Depth <- catchDepth$Depth*0.3048
+catchDepth <- catchDepth[!catchDepth$Sample == "17_301_Gm",]
+catchDepth$ColorType <- as.factor(catchDepth$ColorType) 
+catchDepth$ColorType <- factor(catchDepth$ColorType,levels(catchDepth$ColorType)[c(2,1)])
+par(bty = "l")
+boxplot(Depth~ColorType, ylim = rev(range(catchDepth$Depth)), data = catchDepth, col = c("firebrick", "lightblue"), ylab = "Catch Depth (m)")
+
+```

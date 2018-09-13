@@ -1,0 +1,118 @@
+"","SampleID","Spring","Winter","Spawning","CollectionDate","CollectionSite","TotalLength","WeightTotal","WeightGonad","WeightLiver","ColorType","Age_SideA","AgeConf","DiaConf","Notes","final.diameter","OtolSeason","FinalSpawningAssignment"
+"1","16_216_Gm",0.335191459946158,0.664808540053842,"Winter",2016-06-10,"Coastal_MarbleheadA",19.56,NA,NA,NA,"Olive",3,5,5,"",2.488,"Winter","Winter"
+"2","16_220_Gm",0.0131804951911113,0.986819504808889,"Winter",2016-06-10,"Coastal_MarbleheadC",25.92,NA,NA,NA,"Olive",3,5,5,"looks like side B hits closer to the center",3.67,"Winter","Winter"
+"3","16_221_Gm",0.693842412974659,0.306157587025341,"Spring",2016-08-11,"Stellwagon_Bank_A",16.47,NA,NA,NA,"Olive",2,5,5,"",3.153,"Winter","unknown"
+"4","16_223_Gm",0.520548138333811,0.479451861666189,"Spring",2016-08-11,"Stellwagon_Bank_A",22.99,NA,NA,NA,"Olive",3,5,5,"",2.7005,"Winter","unknown"
+"5","16_224_Gm",0.0481429208404204,0.95185707915958,"Winter",2016-08-11,"Stellwagon_Bank_A",22.26,NA,NA,NA,"Olive",3,5,5,"",2.983,"Winter","Winter"
+"6","16_225_Gm",0.408714829963486,0.591285170036514,"Winter",2016-08-11,"Stellwagon_Bank_B",23.49,NA,NA,NA,"Olive",3,5,5,"",2.324,"Winter","Winter"
+"7","16_226_Gm",0.0859462128564547,0.914053787143545,"Winter",2016-08-11,"Stellwagon_Bank_B",18.96,NA,NA,NA,"Olive",2,5,5,"",3.699,"Winter","Winter"
+"8","16_227_Gm",0.945490161011764,0.0545098389882357,"Spring",2016-08-11,"Stellwagon_Bank_B",18.53,NA,NA,NA,"Olive",3,5,5,"",3.254,"Winter","unknown"
+"9","16_228_Gm",0.223027196551191,0.776972803448809,"Winter",2016-08-11,"Stellwagon_Bank_B",21.56,NA,NA,NA,"Olive",3,5,5,"",2.338,"Winter","Winter"
+"10","16_229_Gm",0.0179675356205624,0.982032464379438,"Winter",2016-08-11,"Stellwagon_Bank_B",23.36,NA,NA,NA,"Olive",3,2,5,"",3.949,"Winter","Winter"
+"11","16_230_Gm",0.0304482292432143,0.969551770756786,"Winter",2016-08-11,"Stellwagon_Bank_B",27.07,NA,NA,NA,"Olive",4,5,5,"",2.892,"Winter","Winter"
+"12","16_231_Gm",0.0456980381897276,0.954301961810272,"Winter",2016-08-11,"Stellwagon_Bank_B",27.81,NA,NA,NA,"Olive",4,5,3,"broken may influence the diameter measurement; second broken can do thin section but not full otolith image",3.861,"Winter","Winter"
+"13","16_232_Gm",0.120686798408803,0.879313201591197,"Winter",2016-08-11,"Stellwagon_Bank_B",22.78,NA,NA,NA,"Olive",3,5,5,"",2.577,"Winter","Winter"
+"14","16_233_Gm",0.390837492730104,0.609162507269896,"Winter",2016-08-11,"Stellwagon_Bank_B",22.67,NA,NA,NA,"Olive",3,5,5,"",3.3565,"Winter","Winter"
+"15","16_234_Gm",0.00213138080558915,0.997868619194411,"Winter",2016-08-11,"Stellwagon_Bank_B",24.17,NA,NA,NA,"Olive",3,5,5,"",3.136,"Winter","Winter"
+"16","16_235_Gm",0.0576304061139372,0.942369593886063,"Winter",2016-08-11,"Stellwagon_Bank_B",25.53,NA,NA,NA,"Olive",NA,NA,NA,"broken; second otolith crystalized can do cross section but not full otolith",NA,NA,NA
+"17","16_236_Gm",0.0586191332871677,0.941380866712832,"Winter",2016-08-11,"Stellwagon_Bank_B",24.07,NA,NA,NA,"Olive",3,5,5,"broken does not influence the diameter measurement; second otolith fine",3.0765,"Winter","Winter"
+"18","16_237_Gm",0.0111963479272653,0.988803652072735,"Winter",2016-08-11,"Stellwagon_Bank_B",25.79,NA,NA,NA,"Olive",3,5,5,"",3.62,"Winter","Winter"
+"19","16_238_Gm",0.00334456039848027,0.99665543960152,"Winter",2016-08-11,"Stellwagon_Bank_B",24.92,NA,NA,NA,"Olive",3,3,5,"Very odd shaped otolith; 3rd year band right on edge",3.12,"Winter","Winter"
+"20","16_239_Gm",0.402200313332925,0.597799686667075,"Winter",2016-08-11,"Stellwagon_Bank_B",26.18,NA,NA,NA,"Olive",3,5,3,"Faint inner band hard to estimate edges",3.61,"Winter","Winter"
+"21","16_240_Gm",0.568078437316245,0.431921562683755,"Spring",2016-08-11,"Stellwagon_Bank_B",25.65,NA,NA,NA,"Olive",3,5,5,"",2.656,"Winter","unknown"
+"22","16_241_Gm",0.0952941793852391,0.904705820614761,"Winter",2016-08-11,"Stellwagon_Bank_B",26.8,NA,NA,NA,"Olive",6,5,5,"",1.212,"Spring","unknown"
+"23","16_242_Gm",0.372744794313831,0.627255205686169,"Winter",2016-08-11,"Stellwagon_Bank_B",24.06,NA,NA,NA,"Olive",5,5,5,"",2.366,"Winter","Winter"
+"24","16_243_Gm",0.872259219057861,0.127740780942139,"Spring",2016-08-11,"Stellwagon_Bank_B",21.57,NA,NA,NA,"Olive",3,5,5,"",2.626,"Winter","unknown"
+"25","16_244_Gm",0.017052426933691,0.982947573066309,"Winter",2016-08-11,"Stellwagon_Bank_B",27.59,NA,NA,NA,"Olive",3,5,5,"",2.843,"Winter","Winter"
+"26","16_245_Gm",0.652872863967636,0.347127136032364,"Spring",2016-08-11,"Stellwagon_Bank_B",20.46,NA,NA,NA,"Olive",3,5,5,"",2.707,"Winter","unknown"
+"27","16_246_Gm",0.168682910502562,0.831317089497438,"Winter",2016-08-11,"Stellwagon_Bank_B",26.05,NA,NA,NA,"Olive",3,5,5,"",2.868,"Winter","Winter"
+"28","16_247_Gm",0.775903377803783,0.224096622196217,"Spring",2016-08-11,"Stellwagon_Bank_B",27.2,NA,NA,NA,"Olive",3,5,5,"",2.7425,"Winter","unknown"
+"29","16_248_Gm",0.366462942932424,0.633537057067576,"Winter",2016-08-11,"Stellwagon_Bank_B",20.68,NA,NA,NA,"Olive",3,3,3,"Very difficult to read otolith",1.9055,"Spring","unknown"
+"30","16_249_Gm",0.894909017234843,0.105090982765157,"Spring",2016-08-11,"Stellwagon_Bank_B",23.18,NA,NA,NA,"Olive",3,5,4,"Hard to read edges of first annulus",2.603,"Winter","unknown"
+"31","17_002_Gm",0.935486260108685,0.0645137398913153,"Spring",2017-06-04,"Coastal_MarbleheadD",25.01130413,2170,20.19,68.17,"Olive",4,5,5,"",2.666,"Winter","unknown"
+"32","17_009_Gm",0.378918082662092,0.621081917337908,"Winter",2017-07-14,"Coastal_Ipswich_A",17.28122876,690,1.41,14.9,"Olive",2,5,5,"",2.381,"Winter","Winter"
+"33","17_017_Gm",0.0830439889812721,0.916956011018728,"Winter",2017-07-14,"Coastal_Ipswich_B",24.79859127,2330,7.1,106.7,"Olive",4,5,3,"cracked; second burned",2.6435,"Winter","Winter"
+"34","17_025_Gm",0.0377842149162867,0.962215785083713,"Winter",2017-07-20,"Coastal_MarbleheadE",16.85571712,750,0.56,11.49,"Olive",2,5,5,"",2.421,"Winter","Winter"
+"35","17_030_Gm",0.00550114453846091,0.994498855461539,"Winter",2017-08-16,"Coastal_MarbleheadF",25.45818626,2440,17.5,93.06,"Olive",4,3,3,"two dark bands close together at center and last band close to edge",2.093,"Spring","unknown"
+"36","17_032_Gm",0.0940947171049817,0.905905282895018,"Winter",2017-08-16,"Coastal_MarbleheadF",22.26050514,2260,6.22,77.21,"Olive",3,3,5,"Hard to tell which is first annulus could be 4 year old",2.751,"Winter","Winter"
+"37","17_033_Gm",0.800548544132239,0.199451455867761,"Spring",2017-08-16,"Coastal_MarbleheadF",18.15187303,890,8.71,20.2,"Olive",3,4,5,"",2.76,"Winter","unknown"
+"38","17_153_Gm",0.868012888736203,0.131987111263797,"Spring",2017-09-08,"Coastal_MarbleheadB",17.94,960,3.09,20.35,"Olive",2,4,5,"",2.576,"Winter","unknown"
+"39","17_156_Gm",0.0194988407412957,0.980501159258704,"Winter",2017-09-08,"Coastal_MarbleheadB",20.8,1790,98.52,38.22,"Olive",3,5,5,"",3.073,"Winter","Winter"
+"40","17_284_Gm",0.10979372425351,0.89020627574649,"Winter",2017-10-06,"Stellwagon_Bank_A",21.96,1760,146.2,78.54,"Olive",3,4,5,"dark circle in the middle but only a single ring",3.065,"Winter","Winter"
+"41","17_285_Gm",0.865605918246913,0.134394081753087,"Spring",2017-10-06,"Stellwagon_Bank_A",25.91,2770,45.61,104.9,"Olive",4,3,5,"hard to read age",2.955,"Winter","unknown"
+"42","17_286_Gm",0.0795375319886916,0.920462468011308,"Winter",2017-10-06,"Stellwagon_Bank_A",25.63,3300,74.57,219.05,"Olive",4,4,5,"",2.696,"Winter","Winter"
+"43","17_287_Gm",0.801745015163555,0.198254984836446,"Spring",2017-10-06,"Stellwagon_Bank_A",19.43,1170,4.41,17.47,"Olive",3,5,5,"",2.804,"Winter","unknown"
+"44","17_288_Gm",0.826270786419627,0.173729213580373,"Spring",2017-10-06,"Stellwagon_Bank_A",27.76,3480,19.22,139.5,"Olive",4,5,5,"",3.2615,"Winter","unknown"
+"45","17_289_Gm",0.979520082254948,0.0204799177450516,"Spring",2017-10-06,"Stellwagon_Bank_A",21.47,1640,5.58,78.72,"Olive",4,5,5,"",2.2955,"Winter","unknown"
+"46","17_290_Gm",0.948726428129099,0.0512735718709009,"Spring",2017-10-06,"Stellwagon_Bank_A",20.01,1370,15.2,50.6,"Olive",4,5,5,"",1.891,"Spring","Spring"
+"47","17_291_Gm",0.656731135160916,0.343268864839084,"Spring",2017-10-06,"Stellwagon_Bank_A",23.38,2180,139.05,71.12,"Olive",4,5,5,"",3.449,"Winter","unknown"
+"48","17_292_Gm",0.90746689794813,0.0925331020518697,"Spring",2017-10-06,"Stellwagon_Bank_A",26.37,2720,3.94,88.22,"Olive",3,5,5,"",2.9025,"Winter","unknown"
+"49","17_293_Gm",0.0887481519683744,0.911251848031626,"Winter",2017-10-06,"Stellwagon_Bank_A",23.74,NA,NA,NA,"Olive",NA,NA,NA,NA,NA,NA,NA
+"50","17_294_Gm",0.764006469159543,0.235993530840457,"Spring",2017-10-06,"Stellwagon_Bank_A",28.33,4510,175.91,162.36,"Olive",5,5,5,"",2.8095,"Winter","unknown"
+"51","17_295_Gm",0.108300985424018,0.891699014575982,"Winter",2017-10-06,"Stellwagon_Bank_A",25.11,2860,27.32,213.41,"Olive",NA,NA,NA,"",NA,NA,NA
+"52","17_296_Gm",0.00495172313105609,0.995048276868944,"Winter",2017-10-06,"Stellwagon_Bank_A",24.64,3200,238.23,119.54,"Olive",4,5,5,"",2.8425,"Winter","Winter"
+"53","17_297_Gm",0.98499708098258,0.0150029190174198,"Spring",2017-10-06,"Stellwagon_Bank_A",23.62,2730,61.82,121.22,"Olive",NA,NA,NA,"",NA,NA,NA
+"54","17_298_Gm",0.275218574870772,0.724781425129228,"Winter",2017-10-06,"Stellwagon_Bank_A",21.76,2020,149.3,59.79,"Olive",3,5,5,"",3.187,"Winter","Winter"
+"55","17_299_Gm",0.348232281053772,0.651767718946228,"Winter",2017-10-06,"Stellwagon_Bank_A",21.71,NA,NA,NA,"Olive",NA,NA,NA,NA,NA,NA,NA
+"56","17_300_Gm",0.00424303032902011,0.99575696967098,"Winter",2017-10-06,"Stellwagon_Bank_A",24.64,3470,236.4,133.45,"Olive",NA,NA,NA,"",NA,NA,NA
+"57","17_302_Gm",0.329750347215849,0.670249652784151,"Winter",2017-10-06,"Stellwagon_Bank_A",22.7,NA,NA,NA,"Olive",NA,NA,NA,"",NA,NA,NA
+"58","17_303_Gm",0.101961384794311,0.898038615205689,"Winter",2017-10-06,"Stellwagon_Bank_A",33.16,NA,NA,NA,"Olive",5,5,5,"",3.837,"Winter","Winter"
+"59","17_304_Gm",0.0182966348166029,0.981703365183397,"Winter",2017-10-06,"Stellwagon_Bank_A",27.46,NA,NA,NA,"Olive",4,5,5,"",2.406,"Winter","Winter"
+"60","17_305_Gm",0.010873317286375,0.989126682713625,"Winter",2017-10-06,"Stellwagon_Bank_A",24.17,2350,111.01,72.27,"Olive",3,5,5,"",3.572,"Winter","Winter"
+"61","17_306_Gm",0.190613577750871,0.809386422249129,"Winter",2017-10-06,"Stellwagon_Bank_A",22.08,2020,180.53,52.71,"Olive",4,5,5,"",3.3645,"Winter","Winter"
+"62","17_307_Gm",0.863205321920552,0.136794678079448,"Spring",2017-10-06,"Stellwagon_Bank_A",20.15,1630,115.15,33.79,"Olive",4,5,5,"",3.576,"Winter","unknown"
+"63","17_308_Gm",0.051613649343606,0.948386350656394,"Winter",2017-10-03,"Stellwagon_Bank_A",25.61,3220,12.54,207.25,"Olive",4,5,4,"cracked in middle but doesn't seem to affect measurement",2.794,"Winter","Winter"
+"64","17_309_Gm",0.0861567081386512,0.913843291861349,"Winter",2017-10-06,"Stellwagon_Bank_A",22.09,2000,3.25,61.66,"Olive",3,5,5,"",2.5425,"Winter","Winter"
+"65","17_310_Gm",0.993981946294112,0.00601805370588772,"Spring",2017-10-06,"Stellwagon_Bank_A",22.06,NA,NA,NA,"Olive",NA,NA,NA,NA,NA,NA,NA
+"66","17_311_Gm",0.0380396377125514,0.961960362287449,"Winter",2017-10-06,"Stellwagon_Bank_A",23.16,2610,80.77,124.8,"Olive",4,5,5,"",2.691,"Winter","Winter"
+"67","17_313_Gm",0.0437525551086938,0.956247444891306,"Winter",2017-10-15,"Coastal_MarbleheadB",21.87,1530,8.22,46.86,"Olive",3,5,5,"",3.139,"Winter","Winter"
+"68","17_314_Gm",0.998534451688509,0.00146554831149141,"Spring",2017-10-15,"Coastal_MarbleheadB",17.02,630,5.21,7.97,"Olive",2,5,5,"single dark ring in middle; don't think its an annulus",2.843,"Winter","unknown"
+"69","17_324_Gm",0.611972766252752,0.388027233747248,"Spring",2017-10-19,"Coastal_MarbleheadI",21.29,1610,147.43,53.46,"Olive",3,5,5,"",3.115,"Winter","unknown"
+"70","17_325_Gm",0.789251990602163,0.210748009397837,"Spring",2017-10-19,"Coastal_MarbleheadI",17.09,650,0.46,8.04,"Olive",3,5,5,"",2.583,"Winter","unknown"
+"71","16_215_Gm",NA,NA,NA,2016-06-10,"Coastal_MarbleheadA",18.24,NA,NA,NA,"Red",3,5,5,"",2.513,"Winter",NA
+"72","16_217_Gm",NA,NA,NA,2016-06-10,"Coastal_MarbleheadA",21.7,NA,NA,NA,"Red",3,5,5,"",2.578,"Winter",NA
+"73","16_218_Gm",NA,NA,NA,2016-06-10,"Coastal_MarbleheadB",26.63,NA,NA,NA,"Red",5,5,5,"",2.61,"Winter",NA
+"74","16_219_Gm",NA,NA,NA,2016-06-10,"Coastal_MarbleheadB",13.58,NA,NA,NA,"Red",2,3,5,"last year band close to edge of otolith",3.1165,"Winter",NA
+"75","17_001_Gm",NA,NA,NA,2017-06-04,"Coastal_MarbleheadD",21.23843411,1890,11.95,45.22,"Red",4,4,5,"last year band close to edge of otolith",2.62,"Winter",NA
+"76","17_003_Gm",NA,NA,NA,2017-07-09,"Coastal_Marblehead",15.55047312,560,1.99,3.66,"Red",2,1,5,"faint band in the center of otolith could be 3 year old",2.869,"Winter",NA
+"77","17_004_Gm",NA,NA,NA,2017-07-09,"Coastal_Marblehead",21.58144054,1290,14.06,41.36,"Red",NA,NA,NA,"recut; second burned",NA,NA,NA
+"78","17_005_Gm",NA,NA,NA,2017-07-09,"Coastal_Marblehead",15.31478871,520,1.08,1.95,"Red",2,5,5,"",2.404,"Winter",NA
+"79","17_006_Gm",NA,NA,NA,2017-07-09,"Coastal_Marblehead",16.67826466,760,NA,0.57,"Red",3,5,5,"",2.9,"Winter",NA
+"80","17_007_Gm",NA,NA,NA,2017-07-09,"Coastal_Marblehead",17.26600058,970,3.9,10.76,"Red",3,5,5,"Neither seem to reach the center",2.648,"Winter",NA
+"81","17_008_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_A",19.83093126,970,6.2,27.88,"Red",3,5,5,"",2.448,"Winter",NA
+"82","17_010_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_B",17.81049175,690,2.7,8.05,"Red",3,5,5,"",2.554,"Winter",NA
+"83","17_011_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_A",23.33862853,2020,6.52,90.31,"Red",5,5,5,"poor cut; no second otolith",2.563,"Winter",NA
+"84","17_012_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_B",16.64375304,640,1.06,16.99,"Red",NA,NA,NA,"recut; second burned",NA,NA,NA
+"85","17_013_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_B",21.98867349,1160,2.28,23.77,"Red",4,5,5,"",2.734,"Winter",NA
+"86","17_014_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_B",23.86251055,2150,4.47,93.71,"Red",4,5,5,"",2.441,"Winter",NA
+"87","17_015_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_B",19.29647318,1030,2.46,47.54,"Red",3,1,5,"Hard to tell which is first annulus could be 4 year old",2.854,"Winter",NA
+"88","17_016_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_B",19.94389975,1270,2.63,60.7,"Red",3,1,5,"Hard to tell which is first annulus could be 4 year old",2.74,"Winter",NA
+"89","17_018_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_C",15.74019767,490,1.85,6.99,"Red",NA,NA,NA,"recut; second otolith fine",NA,NA,NA
+"90","17_019_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_C",21.51591004,1370,12.72,36.28,"Red",3,5,5,"",2.996,"Winter",NA
+"91","17_020_Gm",NA,NA,NA,2017-07-14,"Coastal_Ipswich_C",20.22193211,1070,5.85,26.97,"Red",NA,NA,NA,"recut; second burned",NA,NA,NA
+"92","17_021_Gm",NA,NA,NA,2017-07-19,"Burnham_Rocks",19.57822111,1310,2.42,46.03,"Red",NA,NA,NA,"recut; second crystalized",NA,NA,NA
+"93","17_022_Gm",NA,NA,NA,2017-07-19,"Burnham_Rocks",14.72684494,580,3.6,9.2,"Red",3,1,5,"Hard to tell which is first annulus could be 4 year old",2.987,"Winter",NA
+"94","17_023_Gm",NA,NA,NA,2017-07-19,"Burnham_Rocks",13.9653002,240,0.48,5.42,"Red",3,1,5,"Hard to tell which is first annulus could be 4 year old",2.9415,"Winter",NA
+"95","17_024_Gm",NA,NA,NA,2017-07-20,"Coastal_MarbleheadE",16.61446389,930,0.78,21.97,"Red",2,3,5,"Hard to tell which is first annulus could be 3 year old",2.8965,"Winter",NA
+"96","17_026_Gm",NA,NA,NA,2017-07-20,"Coastal_MarbleheadE",28.319563,3960,34.19,171.9,"Red",NA,NA,NA,"recut; second burned",NA,NA,NA
+"97","17_027_Gm",NA,NA,NA,2017-07-20,"Coastal_MarbleheadE",16.06373296,720,0.66,15.22,"Red",2,5,5,"",2.971,"Winter",NA
+"98","17_028_Gm",NA,NA,NA,2017-07-20,"Coastal_MarbleheadE",19.8549375,1300,6.31,33.22,"Red",2,5,5,"",2.911,"Winter",NA
+"99","17_029_Gm",NA,NA,NA,2017-07-20,"Coastal_MarbleheadE",13.70704364,430,1.03,8.62,"Red",2,3,5,"",2.8495,"Winter",NA
+"100","17_031_Gm",NA,NA,NA,2017-08-16,"Coastal_MarbleheadF",23.55302016,2250,17.5,93.06,"Red",4,5,5,"",2.432,"Winter",NA
+"101","17_034_Gm",NA,NA,NA,2017-08-16,"Coastal_MarbleheadF",27.14461701,3460,58.33,141.14,"Red",4,4,5,"",2.2025,"Winter",NA
+"102","17_154_Gm",NA,NA,NA,2017-09-08,"Coastal_MarbleheadB",15.61,690,2.46,7.57,"Red",2,4,5,"",2.879,"Winter",NA
+"103","17_155_Gm",NA,NA,NA,2017-09-08,"Coastal_MarbleheadB",22.2,1890,132.18,56.4,"Red",3,5,5,"",2.904,"Winter",NA
+"104","17_301_Gm",NA,NA,NA,2017-10-06,"Stellwagon_Bank_A",25.01,NA,NA,NA,"Red",3,5,5,"",3.2415,"Winter",NA
+"105","17_315_Gm",NA,NA,NA,2017-10-15,"Coastal_MarbleheadB",12.8,320,0.59,5.42,"Red",1,5,5,"",3.107,"Winter",NA
+"106","17_316_Gm",NA,NA,NA,2017-10-15,"Coastal_MarbleheadB",13.54,380,0.25,5.46,"Red",1,5,5,"",2.792,"Winter",NA
+"107","17_317_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadB",15.05,470,14.39,4.36,"Red",3,5,5,"",3.0795,"Winter",NA
+"108","17_318_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadB",11.89,290,0,3.71,"Red",1,5,5,"",2.7285,"Winter",NA
+"109","17_319_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadB",13.45,100,1.1,5.98,"Red",2,5,5,"",2.616,"Winter",NA
+"110","17_320_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadH",22.3,1910,27.87,61.07,"Red",2,5,5,"",2.695,"Winter",NA
+"111","17_321_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadH",11.99,320,0,7.24,"Red",1,5,5,"",3.285,"Winter",NA
+"112","17_323_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadI",16.85,1340,2.51,8.38,"Red",2,5,5,"",3.269,"Winter",NA
+"113","17_326_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadA",24.58,2250,78.22,100.26,"Red",3,3,5,"",2.883,"Winter",NA
+"114","17_327_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadA",21.78,1480,64.38,38.58,"Red",4,5,5,"",1.7875,"Spring",NA
+"115","17_328_Gm",NA,NA,NA,2017-10-19,"Coastal_MarbleheadA",16.42,700,0.34,8.01,"Red",2,1,5,"",2.821,"Winter",NA
+"116","16_222_Gm",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,2,5,5,"",2.121,"Spring",NA
+"117","17_322_Gm",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,2,5,5,"",2.8,"Winter",NA

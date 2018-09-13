@@ -1,0 +1,95 @@
+---
+title: "Landmark Analysis"
+author: "Sara Michele Schaal"
+date: "6/21/2018"
+output: pdf_document
+---
+
+```{r}
+#Set working directory
+setwd("./LandmarkAnalysis")
+pracData <- read.csv("./Landmark_Results_Full.csv")
+pracData <- pracData[, c(1,2,7,8)]
+colnames(pracData) <- c("SampleID", "Landmark", "X", "Y")
+
+install.packages("tidyr")
+library("tidyr")
+library("reshape2")
+pracData$Landmark <- as.factor(pracData$Landmark)
+pracDatawideX <- dcast(pracData, SampleID ~ Landmark, value.var = "X")
+pracDatawideX$Coordinate <- "X"
+pracDatawideY <- dcast(pracData, SampleID ~ Landmark, value.var = "Y")
+pracDatawideY$Coordinate <- "Y"
+pracDataFull <- rbind(pracDatawideX, pracDatawideY)
+pracDataFull <- pracDataFull[order(pracDataFull$SampleID),]
+
+df.Measurements <- as.data.frame(matrix(nrow = length(unique(pracDataFull$SampleID)), ncol = 25))
+colnames(df.Measurements) <- c("SampleID","RefPixels", "TotalLength", "D1", "D2", "D3", "D4", "D5", "D6", 
+                               "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", "D17",
+                               "D18", "D19", "D20", "D21", "D22")
+inches <- 4
+count <- 1
+for(i in 1:nrow(pracDataFull)){
+  if(pracDataFull$SampleID[i+1] == pracDataFull$SampleID[i]){
+    
+    #Get SampleID
+    df.Measurements$SampleID[count] <- as.character(pracDataFull$SampleID[i])
+    
+    #Get ruler distance
+    df.Measurements$RefPixels[count] <- (sqrt(((pracDataFull$`14`[i] - pracDataFull$`15`[i])^2) +
+                                        (pracDataFull$`14`[i+1] - pracDataFull$`15`[i+1])^2))/inches
+    
+    #Landmark Measurements
+    df.Measurements$D1[count] <- (sqrt(((pracDataFull$`1`[i] - pracDataFull$`3`[i])^2) +
+                                 ((pracDataFull$`1`[i+1] - pracDataFull$`3`[i+1])^2)))/df.Measurements$RefPixels[count]
+    df.Measurements$D2[count] <- (sqrt(((pracDataFull$`1`[i] - pracDataFull$`4`[i])^2) +
+                                 ((pracDataFull$`1`[i+1] - pracDataFull$`4`[i+1])^2)))/df.Measurements$RefPixels[count]
+    df.Measurements$D3[count] <- sqrt(((pracDataFull$`1`[i] - pracDataFull$`2`[i])^2) +
+                                 ((pracDataFull$`1`[i+1] - pracDataFull$`2`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D4[count] <- sqrt(((pracDataFull$`3`[i] - pracDataFull$`5`[i])^2) +
+                                  ((pracDataFull$`3`[i+1] - pracDataFull$`5`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D5[count] <- sqrt(((pracDataFull$`3`[i] - pracDataFull$`12`[i])^2) +
+                                  ((pracDataFull$`3`[i+1] - pracDataFull$`12`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D6[count] <- sqrt(((pracDataFull$`2`[i] - pracDataFull$`12`[i])^2) +
+                                  ((pracDataFull$`2`[i+1] - pracDataFull$`12`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D7[count] <- sqrt(((pracDataFull$`5`[i] - pracDataFull$`12`[i])^2) +
+                                  ((pracDataFull$`5`[i+1] - pracDataFull$`12`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D8[count] <- sqrt(((pracDataFull$`6`[i] - pracDataFull$`12`[i])^2) +
+                                  ((pracDataFull$`6`[i+1] - pracDataFull$`12`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D9[count] <- sqrt(((pracDataFull$`11`[i] - pracDataFull$`12`[i])^2) +
+                                  ((pracDataFull$`11`[i+1] - pracDataFull$`12`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D10[count] <- sqrt(((pracDataFull$`5`[i] - pracDataFull$`6`[i])^2) +
+                                  ((pracDataFull$`5`[i+1] - pracDataFull$`6`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D11[count] <- sqrt(((pracDataFull$`5`[i] - pracDataFull$`11`[i])^2) +
+                                  ((pracDataFull$`5`[i+1] - pracDataFull$`11`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D12[count] <- sqrt(((pracDataFull$`6`[i] - pracDataFull$`11`[i])^2) +
+                                  ((pracDataFull$`6`[i+1] - pracDataFull$`11`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D13[count] <- sqrt(((pracDataFull$`6`[i] - pracDataFull$`10`[i])^2) +
+                                  ((pracDataFull$`6`[i+1] - pracDataFull$`10`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D14[count] <- sqrt(((pracDataFull$`6`[i] - pracDataFull$`7`[i])^2) +
+                                  ((pracDataFull$`6`[i+1] - pracDataFull$`7`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D15[count] <- sqrt(((pracDataFull$`7`[i] - pracDataFull$`11`[i])^2) +
+                                  ((pracDataFull$`7`[i+1] - pracDataFull$`11`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D16[count] <- sqrt(((pracDataFull$`7`[i] - pracDataFull$`8`[i])^2) +
+                                  ((pracDataFull$`7`[i+1] - pracDataFull$`8`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D17[count] <- sqrt(((pracDataFull$`7`[i] - pracDataFull$`9`[i])^2) +
+                                  ((pracDataFull$`7`[i+1] - pracDataFull$`9`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D18[count] <- sqrt(((pracDataFull$`8`[i] - pracDataFull$`9`[i])^2) +
+                                  ((pracDataFull$`8`[i+1] - pracDataFull$`9`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D19[count] <- sqrt(((pracDataFull$`9`[i] - pracDataFull$`10`[i])^2) +
+                                  ((pracDataFull$`9`[i+1] - pracDataFull$`10`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D20[count] <- sqrt(((pracDataFull$`10`[i] - pracDataFull$`11`[i])^2) +
+                                  ((pracDataFull$`10`[i+1] - pracDataFull$`11`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D21[count] <- sqrt(((pracDataFull$`8`[i] - pracDataFull$`10`[i])^2) +
+                                  ((pracDataFull$`8`[i+1] - pracDataFull$`10`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$D22[count] <- sqrt(((pracDataFull$`7`[i] - pracDataFull$`10`[i])^2) +
+                                  ((pracDataFull$`7`[i+1] - pracDataFull$`10`[i+1])^2))/df.Measurements$RefPixels[count]
+    df.Measurements$TotalLength[count] <- sqrt(((pracDataFull$`1`[i] - pracDataFull$`13`[i])^2) +
+                                  ((pracDataFull$`1`[i+1] - pracDataFull$`13`[i+1])^2))/df.Measurements$RefPixels[count]
+    
+  }else{
+    count <- count + 1
+  }
+}
+
+```

@@ -1,0 +1,847 @@
+---
+title: "Otolith_Analysis"
+author: "Sara Michele Schaal"
+date: "7/3/2018"
+output: pdf_document
+---
+
+```{r}
+library(MASS)
+otolith.data <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/Otolith_Age_Spawning.csv")
+
+head(otolith.data)
+
+# Calculate final diameter based on two measurements
+otolith.data$final.diameter <- NA
+for(i in 1:nrow(otolith.data)){
+  if(otolith.data$BetterSide[i] == "Both"){
+   otolith.data$final.diameter[i] <- mean(c(otolith.data$Diameter_SideA[i], otolith.data$Diameter_SideB[i]))
+  } else if(otolith.data$BetterSide[i] == "A"){
+    otolith.data$final.diameter[i] <- otolith.data$Diameter_SideA[i]
+  } else if(otolith.data$BetterSide[i] == "B"){
+    otolith.data$final.diameter[i] <- otolith.data$Diameter_SideB[i]
+  }
+}
+
+# Assign spawning season
+otolith.data$season <- NA
+for(i in 1:nrow(otolith.data)){
+  if(!is.na(otolith.data$final.diameter[i]) & otolith.data$final.diameter[i] > 2.18){
+    otolith.data$season[i] <- "Winter"
+  } else if(!is.na(otolith.data$final.diameter[i]) & otolith.data$final.diameter[i] <= 2.18){
+    otolith.data$season[i] <- "Spring"
+  } else if(is.na(otolith.data$final.diameter[i])){
+    otolith.data$season[i] <- NA
+  }
+}
+
+```
+
+Plotting
+
+```{r}
+
+# Create Histogram with Otolith Diameter and Assignment
+  hist(otolith.data$final.diameter[otolith.data$season == "Spring"], col = "darkolivegreen4",
+      xlim = c(1, 4), ylim = c(0, 25), breaks = seq(1, 4, 0.2), 
+      main = "Otolith Spawning Assignment",
+      xlab = "Otolith Diameter (mm)")
+  hist(otolith.data$final.diameter[otolith.data$season == "Winter"], col = "cornflowerblue",
+      add = TRUE)
+  legend("topright", legend = c("Spring", "Winter"), 
+         fill = c("darkolivegreen4", "cornflowerblue"))
+
+# add thresholds for confidence based on Micah's analysis
+  abline(v = 2.18, lty = 2, lwd = 2)
+  abline(v = 1.2, lty = 3, lwd = 2)
+  abline(v = 3.1, lty = 3, lwd = 2)
+
+  text(2.2, 18, pos = 4, labels = "50%", srt = 90)
+  text(1.22, 15, pos = 4, labels = "95% Spring", srt = 90)
+  text(3.12, 15, pos = 4, labels = "95% Winter", srt = 90)
+
+# Save image as pdf
+  #pdf(file = "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/figures/SpawningAssignmentOtoliths.pdf")
+  #write.csv(otolith.data, "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtolithSpawningAssignment.csv")
+```
+
+
+```{r}
+
+  masterData <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/morphPlusMetadata20180628.csv")
+  colnames(masterData)[1:3] <- c("SampleID", "CollectionDate", "CollectionSite")
+  masterOto <- merge(masterData, otolith.data, by = "SampleID", all = TRUE)
+
+  # Add year and month data columns and convert date to actual date object
+  masterOto$Year <- as.numeric(substr(masterOto$CollectionDate, 1, 4))
+  masterOto$Month <- as.numeric(substr(masterOto$CollectionDate, 5, 6))
+  masterOto$CollectionDate <- as.Date(as.character(masterOto$CollectionDate), format = ("%Y%m%d"))
+  masterOto$Year[116] <- 2016
+  masterOto$Year[117] <- 2017
+  
+  # combine otolith data and master data
+  dataAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/SamplingSpawningAssignment.csv")
+  
+  # Calculate Birth Year
+  masterOto$birthYear <- as.numeric(masterOto$Year) - masterOto$Age_SideA
+  masterOtolith <- merge(dataAssignSpawn[,20:23], masterOto, by = "SampleID")
+
+  # Plot Otolith Diameter by Spawning Season & Year
+  #par(mfrow = c(2, 1))
+  boxplot(final.diameter ~ season + birthYear, data = masterOtolith, 
+          col = c("darkolivegreen4", "cornflowerblue"), las = 2, 
+          names = c("S_10", "W_10","S_11", "W_11","S_12", "W_12","S_13",
+                    "W_13","S_14", "W_14","S_15", "W_15"),
+          ylab = "Otolith Diameter (mm)", xlab = "Spawning Season & Year",
+          main = "Spawning Season Based on Otolith", ylim = c(1, 4))
+  abline(h = 2.18, lty = 2)
+  boxplot(final.diameter ~ Spawning + birthYear, data = masterOtolith, 
+          col = c("darkolivegreen4", "cornflowerblue"), las = 2, 
+          names = c("S_10", "W_10","S_11", "W_11","S_12", "W_12","S_13", 
+                    "W_13","S_14", "W_14","S_15", "W_15"), 
+          ylab = "Otolith Diameter (mm)", xlab = "Spawning Season & Year", 
+          main = "Spawning Season Based on Morphometrics", ylim = c(1,4))
+  abline(h = 2.18, lty = 2)
+
+```
+
+\newpage
+# Random Forest - Micah's Data
+```{r}
+  
+  library(randomForest)
+
+  # Input data
+  MicahData <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/ibs_spawning_cod.csv")
+  MicahData$Year <- as.numeric(substr(as.character(MicahData$TOWDATE), 7, 8))+2000
+  MicahData$Month <- as.numeric(substr(as.character(MicahData$TOWDATE), 1, 2))
+  MicahData$birthYear <- MicahData$Year - MicahData$AGE
+  relevantYears <- subset(MicahData, subset = birthYear > 2009)
+  
+  hist(relevantYears$birthYear, breaks = 6, main = "Birth Years in Micah's Data", xlab = "Birth Year")
+  hist(masterOtolith$birthYear, breaks = 6, main = "Birth Years in Sara's Data", xlab = "Birth Year")
+  
+  #Subset data into training and validation datasets to test how well it works on known data
+  train <- sample(nrow(relevantYears), 0.7*nrow(relevantYears), replace = FALSE)
+  TrainData <- relevantYears[train,]
+  ValidData <- relevantYears[-train,]
+  
+  #Create RFmodel
+  RFModel <- randomForest(SEASON ~ birthYear + A1, data = TrainData, importance = TRUE)
+  RFModel
+  
+  #Run RFmodel on the training dataset
+  predTrain <- predict(RFModel, TrainData, type = "class")
+  table(predTrain, TrainData$SEASON)
+  
+  #Run RFmodel on the validation dataset
+  predValid <- predict(RFModel, ValidData, type = "class")
+  table(predValid, ValidData$SEASON)
+   
+  # Use all data for final analysis
+  RFModelAllData <- randomForest(SEASON ~ birthYear + A1, data = relevantYears, importance = TRUE)
+  RFModelAllData
+  #Run on my unknown data
+  RFUnknownData <- masterOtolith[!is.na(masterOtolith$season),]
+  
+  colnames(RFUnknownData)[49] <- "A1"
+  RFUnknownPred <- predict(RFModelAllData, RFUnknownData)
+  RFUnknownPred
+  
+  predictedData <- as.data.frame(cbind(RFUnknownData,RFUnknownPred))
+  
+  length(which(predictedData$RFUnknownPred == "WINTER"))
+  length(which(predictedData$RFUnknownPred == "SPRING"))
+  
+  predictedData[which(predictedData$RFUnknownPred == "SPRING"),]
+  
+```
+
+Subset data by years
+2011
+
+```{r}
+palette(c("darkolivegreen4", "cornflowerblue"))
+
+###################
+#### 2011 Data ####
+###################
+  par(mfrow = c(1,2))
+ # Subset data
+  SaraYear11 <- subset(RFUnknownData, subset = RFUnknownData$birthYear == 2011)
+  MicahYear11 <- subset(MicahData, subset = MicahData$birthYear == 2011)
+  
+ #######################
+ #### Random Forest ####
+ #######################
+  
+  #Subset data into training and validation datasets to test how well it works on known data
+  train11 <- sample(nrow(MicahYear11), 0.7*nrow(MicahYear11), replace = FALSE)
+  TrainData11 <- MicahYear11[train11,]
+  ValidData11 <- MicahYear11[-train11,]
+  
+  #Create RFmodel on Training Data
+  RFModel11 <- randomForest(SEASON ~ A1, data = TrainData11, importance = TRUE)
+  
+  #Run RFmodel on the Training Dataset
+  predTrain11 <- predict(RFModel11, TrainData11, type = "class")
+  table(predTrain11, TrainData11$SEASON)
+  
+  #Run RFmodel on the Validation Dataset
+  predValid11 <- predict(RFModel11, ValidData11, type = "class")
+  table(predValid11, ValidData11$SEASON)
+  # 90% accuracy on validation dataset
+  
+  # Run Model from Training Data on full dataset
+  Assign11Micah <- predict(RFModel11, MicahYear11, type = "class")
+  table(Assign11Micah, MicahYear11$SEASON)
+  
+  Prob11Micah <- predict(RFModel11, MicahYear11, type = "prob")
+  colnames(Prob11Micah) <- c("RFOtoSpring", "RFOtoWinter")
+  
+ # Use model to predict unknown samples
+  Prob11Pred <- predict(RFModel11, SaraYear11, type = "prob")
+  colnames(Prob11Pred) <- c("RFOtoSpring", "RFOtoWinter")
+  Assign11Pred <- predict(RFModel11, SaraYear11)
+  
+ ######################################
+ #### Linear Discriminate Analysis ####
+ ######################################
+  
+ # Run LDA
+  LDA2011 <- lda(SEASON ~ A1, data = MicahYear11)
+  LDA2011MicahPred <- predict(LDA2011)
+  LDA2011pred <- predict(LDA2011, newdata = SaraYear11)
+  
+ # Bind all data together
+  df.2011Micah <- cbind(MicahYear11, Prob11Micah, Assign11Micah, LDA2011MicahPred$x, 
+                        LDA2011MicahPred$posterior, LDA2011MicahPred$class)
+  colnames(df.2011Micah)[c(21, 23:25)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  df.2011Sara <- cbind(SaraYear11, Prob11Pred, Assign11Pred, 
+                       LDA2011pred$x, LDA2011pred$posterior, LDA2011pred$class)
+  colnames(df.2011Sara)[c(54, 56:58)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  
+ # Check accuracy of the models
+  RF2011correct <- NULL
+  RF2011incorrect <- NULL
+  for(i in 1:nrow(df.2011Micah)){
+    if(df.2011Micah$SEASON[i] == df.2011Micah$RFAssign[i]){
+      RF2011correct <- c(RF2011correct, as.character(df.2011Micah$SEASON[i]))
+    } else {
+      RF2011incorrect <- c(RF2011incorrect, as.character(df.2011Micah$SEASON[i]))
+    }
+  }
+  100-(length(RF2011incorrect)/length(RF2011correct)*100)
+  
+  LDA2011correct <- NULL
+  LDA2011incorrect <- NULL
+  for(i in 1:nrow(df.2011Micah)){
+    if(df.2011Micah$SEASON[i] == df.2011Micah$LDAAssign[i]){
+      LDA2011correct <- c(LDA2011correct, as.character(df.2011Micah$SEASON[i]))
+    } else {
+      LDA2011incorrect <- c(LDA2011incorrect, as.character(df.2011Micah$SEASON[i]))
+    }
+  }
+  100-(length(LDA2011incorrect)/length(LDA2011correct)*100)
+  
+ # Plot data
+  par(mfrow = c(1,3))
+  nrow(MicahYear11[MicahYear11$SEASON == "SPRING",])
+  nrow(MicahYear11[MicahYear11$SEASON == "WINTER",])
+  nrow(SaraYear11)
+  
+  # Random Forest Results
+  boxplot(MicahYear11$A1~MicahYear11$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.4, "n = 15", col = "darkolivegreen4")
+  text(2, 3.4, "n = 17", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~RFOtoSpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2011Micah[df.2011Micah$RFOtoAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~RFOtoSpring, pch = 19, data = df.2011Micah[df.2011Micah$RFOtoAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.82, 4.25, "Micah RF")
+  plot(df.2011Sara$A1~df.2011Sara$RFOtoSpring, pch = 19, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       col = df.2011Sara$RFOtoAssign)
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.84, 4.25, "Sara RF")
+  text(0.84, 4.15, "n = 1")
+  
+  # LDA Results
+  boxplot(MicahYear11$A1~MicahYear11$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.4, "n = 15", col = "darkolivegreen4")
+  text(2, 3.4, "n = 17", col = "cornflowerblue")
+  text(1.1, 4.35, lwd = 3, pos = 2, "Micah")
+  plot(A1~LDASpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2011Micah[df.2011Micah$LDAAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~LDASpring, pch = 19, data = df.2011Micah[df.2011Micah$LDAAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.77, 4.25, lwd = 3, "Micah LDA")
+  plot(df.2011Sara$A1~df.2011Sara$LDASpring, pch = 19, xlim = c(0,1), ylim = c(1.0, 4.2),
+       xlab = "Spring Spawner Probability", ylab = "",
+       col = df.2011Sara$LDAAssign)
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.78, 4.25, lwd = 3, "Sara LDA")
+  text(0.78, 4.15, lwd = 3, "n = 1")
+```
+
+2012
+
+```{r}
+###################
+#### 2012 Data ####
+###################
+  par(mfrow = c(1,3))
+ # Subset data
+  SaraYear12 <- subset(RFUnknownData, subset = RFUnknownData$birthYear == 2012)
+  MicahYear12 <- subset(MicahData, subset = MicahData$birthYear == 2012)
+  
+ #######################
+ #### Random Forest ####
+ #######################
+  
+  #Subset data into training and validation datasets to test how well it works on known data
+  train12 <- sample(nrow(MicahYear12), 0.7*nrow(MicahYear12), replace = FALSE)
+  TrainData12 <- MicahYear12[train12,]
+  ValidData12 <- MicahYear12[-train12,]
+  
+  #Create RFmodel on Training Data
+  RFModel12 <- randomForest(SEASON ~ A1, data = TrainData12, importance = TRUE)
+  
+  #Run RFmodel on the Training Dataset
+  predTrain12 <- predict(RFModel12, TrainData12, type = "class")
+  table(predTrain12, TrainData12$SEASON)
+  
+  #Run RFmodel on the Validation Dataset
+  predValid12 <- predict(RFModel12, ValidData12, type = "class")
+  table(predValid12, ValidData12$SEASON)
+  # 66.7% accuracy on validation dataset
+  
+  # Run Model from Training Data on full dataset
+  Assign12Micah <- predict(RFModel12, MicahYear12, type = "class")
+  table(Assign12Micah, MicahYear12$SEASON)
+  
+  Prob12Micah <- predict(RFModel12, MicahYear12, type = "prob")
+  colnames(Prob12Micah) <- c("RFOtoSpring", "RFOtoWinter")
+  
+ # Use model to predict unknown samples
+  Prob12Pred <- predict(RFModel12, SaraYear12, type = "prob")
+  colnames(Prob12Pred) <- c("RFOtoSpring", "RFOtoWinter")
+  Assign12Pred <- predict(RFModel12, SaraYear12)
+  
+ ######################################
+ #### Linear Discriminate Analysis ####
+ ######################################
+  
+ # Run LDA
+  LDA2012 <- lda(SEASON ~ A1, data = MicahYear12)
+  LDA2012MicahPred <- predict(LDA2012)
+  LDA2012pred <- predict(LDA2012, newdata = SaraYear12)
+  
+ # Bind all data together
+  df.2012Micah <- cbind(MicahYear12, Prob12Micah, Assign12Micah, LDA2012MicahPred$x, 
+                        LDA2012MicahPred$posterior, LDA2012MicahPred$class)
+  colnames(df.2012Micah)[c(21, 23:25)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  df.2012Sara <- cbind(SaraYear12, Prob12Pred, Assign12Pred, 
+                       LDA2012pred$x, LDA2012pred$posterior, LDA2012pred$class)
+  colnames(df.2012Sara)[c(54, 56:58)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  
+ # Check accuracy of the models
+  RF2012correct <- NULL
+  RF2012incorrect <- NULL
+  for(i in 1:nrow(df.2012Micah)){
+    if(df.2012Micah$SEASON[i] == df.2012Micah$RFOtoAssign[i]){
+      RF2012correct <- c(RF2012correct, as.character(df.2012Micah$SEASON[i]))
+    } else {
+      RF2012incorrect <- c(RF2012incorrect, as.character(df.2012Micah$SEASON[i]))
+    }
+  }
+  100-(length(RF2012incorrect)/length(RF2012correct)*100)
+  
+  LDA2012correct <- NULL
+  LDA2012incorrect <- NULL
+  for(i in 1:nrow(df.2012Micah)){
+    if(df.2012Micah$SEASON[i] == df.2012Micah$LDAAssign[i]){
+      LDA2012correct <- c(LDA2012correct, as.character(df.2012Micah$SEASON[i]))
+    } else {
+      LDA2012incorrect <- c(LDA2012incorrect, as.character(df.2012Micah$SEASON[i]))
+    }
+  }
+  100-(length(LDA2012incorrect)/length(LDA2012correct)*100)
+  
+ # Plot data
+  par(mfrow = c(1,3))
+  nrow(MicahYear12[MicahYear12$SEASON == "SPRING",])
+  nrow(MicahYear12[MicahYear12$SEASON == "WINTER",])
+  nrow(SaraYear12)
+  
+  # Random Forest Results
+  boxplot(MicahYear12$A1~MicahYear12$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.1, "n = 12", col = "darkolivegreen4")
+  text(2, 4.1, "n = 16", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~RFOtoSpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2012Micah[df.2012Micah$RFOtoAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~RFOtoSpring, pch = 19, data = df.2012Micah[df.2012Micah$RFOtoAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.82, 4.25, "Micah RF")
+  plot(df.2012Sara$A1~df.2012Sara$RFOtoSpring, pch = 19, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       col = df.2012Sara$RFOtoAssign)
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.84, 4.25, "Sara RF")
+  text(0.84, 4.15, "n = 4")
+  
+  # LDA Results
+  boxplot(MicahYear12$A1~MicahYear12$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.1, "n = 12", col = "darkolivegreen4")
+  text(2, 4.1, "n = 16", col = "cornflowerblue")
+  text(1.1, 4.35, lwd = 3, pos = 2, "Micah")
+  plot(A1~LDASpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2012Micah[df.2012Micah$LDAAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~LDASpring, pch = 19, data = df.2012Micah[df.2012Micah$LDAAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.77, 4.25, lwd = 3, "Micah LDA")
+  plot(df.2012Sara$A1~df.2012Sara$LDASpring, pch = 19, xlim = c(0,1), ylim = c(1.0, 4.2),
+       xlab = "Spring Spawner Probability", ylab = "",
+       col = df.2012Sara$LDAAssign)
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.78, 4.25, lwd = 3, "Sara LDA")
+  text(0.78, 4.15, lwd = 3, "n = 4")
+  
+```
+
+2013
+
+```{r}
+  
+###################
+#### 2013 Data ####
+###################
+  par(mfrow = c(1,3))
+ # Subset data
+  SaraYear13 <- subset(RFUnknownData, subset = RFUnknownData$birthYear == 2013)
+  MicahYear13 <- subset(MicahData, subset = MicahData$birthYear == 2013)
+  
+ #######################
+ #### Random Forest ####
+ #######################
+  
+  #Subset data into training and validation datasets to test how well it works on known data
+  train13 <- sample(nrow(MicahYear13), 0.7*nrow(MicahYear13), replace = FALSE)
+  TrainData13 <- MicahYear13[train13,]
+  ValidData13 <- MicahYear13[-train13,]
+  
+  #Create RFmodel on Training Data
+  RFModel13 <- randomForest(SEASON ~ A1, data = TrainData13, importance = TRUE)
+  
+  #Run RFmodel on the Training Dataset
+  predTrain13 <- predict(RFModel13, TrainData13, type = "class")
+  table(predTrain13, TrainData13$SEASON)
+  
+  #Run RFmodel on the Validation Dataset
+  predValid13 <- predict(RFModel13, ValidData13, type = "class")
+  table(predValid13, ValidData13$SEASON)
+  # 50% accuracy on validation dataset
+  
+  # Run Model from Training Data on full dataset
+  Assign13Micah <- predict(RFModel13, MicahYear13, type = "class")
+  table(Assign13Micah, MicahYear13$SEASON)
+  
+  Prob13Micah <- predict(RFModel13, MicahYear13, type = "prob")
+  colnames(Prob13Micah) <- c("RFOtoSpring", "RFOtoWinter")
+  
+ # Use model to predict unknown samples
+  Prob13Pred <- predict(RFModel13, SaraYear13, type = "prob")
+  colnames(Prob13Pred) <- c("RFOtoSpring", "RFOtoWinter")
+  Assign13Pred <- predict(RFModel13, SaraYear13)
+  
+ ######################################
+ #### Linear Discriminate Analysis ####
+ ######################################
+  
+ # Run LDA
+  LDA2013 <- lda(SEASON ~ A1, data = MicahYear13)
+  LDA2013MicahPred <- predict(LDA2013)
+  LDA2013pred <- predict(LDA2013, newdata = SaraYear13)
+  
+ # Bind all data together
+  df.2013Micah <- cbind(MicahYear13, Prob13Micah, Assign13Micah, LDA2013MicahPred$x, 
+                        LDA2013MicahPred$posterior, LDA2013MicahPred$class)
+  colnames(df.2013Micah)[c(21, 23:25)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  df.2013Sara <- cbind(SaraYear13, Prob13Pred, Assign13Pred, 
+                       LDA2013pred$x, LDA2013pred$posterior, LDA2013pred$class)
+  colnames(df.2013Sara)[c(54, 56:58)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  
+ # Check accuracy of the models
+  RF2013correct <- NULL
+  RF2013incorrect <- NULL
+  for(i in 1:nrow(df.2013Micah)){
+    if(df.2013Micah$SEASON[i] == df.2013Micah$RFOtoAssign[i]){
+      RF2013correct <- c(RF2013correct, as.character(df.2013Micah$SEASON[i]))
+    } else {
+      RF2013incorrect <- c(RF2013incorrect, as.character(df.2013Micah$SEASON[i]))
+    }
+  }
+  100-(length(RF2013incorrect)/length(RF2013correct)*100)
+  
+  LDA2013correct <- NULL
+  LDA2013incorrect <- NULL
+  for(i in 1:nrow(df.2013Micah)){
+    if(df.2013Micah$SEASON[i] == df.2013Micah$LDAAssign[i]){
+      LDA2013correct <- c(LDA2013correct, as.character(df.2013Micah$SEASON[i]))
+    } else {
+      LDA2013incorrect <- c(LDA2013incorrect, as.character(df.2013Micah$SEASON[i]))
+    }
+  }
+  100-(length(LDA2013incorrect)/length(LDA2013correct)*100)
+  
+ # Plot data
+  par(mfrow = c(1,3))
+  nrow(MicahYear13[MicahYear13$SEASON == "SPRING",])
+  nrow(MicahYear13[MicahYear13$SEASON == "WINTER",])
+  nrow(SaraYear13)
+  
+ # Plot data
+  par(mfrow = c(1,3))
+  nrow(MicahYear13[MicahYear13$SEASON == "SPRING",])
+  nrow(MicahYear13[MicahYear13$SEASON == "WINTER",])
+  nrow(df.2013Micah[df.2013Micah$RFOtoAssign == "SPRING",])
+  nrow(df.2013Micah)
+  nrow(df.2013Micah[df.2013Micah$RFOtoAssign == "WINTER",])
+  nrow(SaraYear13)
+  
+  # Random Forest Results
+  boxplot(MicahYear13$A1~MicahYear13$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.2, "n = 8", col = "darkolivegreen4")
+  text(2, 4.3, "n = 32", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~RFOtoSpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2013Micah[df.2013Micah$RFOtoAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~RFOtoSpring, pch = 19, data = df.2013Micah[df.2013Micah$RFOtoAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.82, 4.25, "Micah RF")
+  plot(A1~RFOtoSpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2013Sara[df.2013Sara$RFOtoAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~RFOtoSpring, pch = 19, data = df.2013Sara[df.2013Sara$RFOtoAssign == "WINTER",], 
+         col = "cornflowerblue" )
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.84, 4.25, "Sara RF")
+  text(0.84, 4.15, "n = 38")
+  
+  #LDA Results
+  boxplot(MicahYear13$A1~MicahYear13$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.2, "n = 8", col = "darkolivegreen4")
+  text(2, 4.3, "n = 32", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~LDASpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2013Micah[df.2013Micah$LDAAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~LDASpring, pch = 19, data = df.2013Micah[df.2013Micah$LDAAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.77, 4.25, "Micah LDA")
+  plot(df.2013Sara$A1~df.2013Sara$LDASpring, pch = 19, xlim = c(0,1), ylim = c(1.0, 4.2),
+       xlab = "Spring Spawner Probability", ylab = "",
+       col = df.2013Sara$LDAAssign)
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.78, 4.25, "Sara LDA")
+  text(0.78, 4.15, "n = 38")
+
+```
+  
+  
+  
+```{r}
+###################
+#### 2014 Data ####
+###################
+  par(mfrow = c(1,3))
+ # Subset data
+  SaraYear14 <- subset(RFUnknownData, subset = RFUnknownData$birthYear == 2014)
+  MicahYear14 <- subset(MicahData, subset = MicahData$birthYear == 2014)
+  
+ #######################
+ #### Random Forest ####
+ #######################
+  
+  #Subset data into training and validation datasets to test how well it works on known data
+  train14 <- sample(nrow(MicahYear14), 0.7*nrow(MicahYear14), replace = FALSE)
+  TrainData14 <- MicahYear14[train14,]
+  ValidData14 <- MicahYear14[-train14,]
+  
+  #Create RFmodel on Training Data
+  RFModel14 <- randomForest(SEASON ~ A1, data = TrainData14, importance = TRUE)
+  
+  #Run RFmodel on the Training Dataset
+  predTrain14 <- predict(RFModel14, TrainData14, type = "class")
+  table(predTrain14, TrainData14$SEASON)
+  
+  #Run RFmodel on the Validation Dataset
+  predValid14 <- predict(RFModel14, ValidData14, type = "class")
+  table(predValid14, ValidData14$SEASON)
+  # 80% accuracy on validation dataset
+  
+  # Run Model from Training Data on full dataset
+  Assign14Micah <- predict(RFModel14, MicahYear14, type = "class")
+  table(Assign14Micah, MicahYear14$SEASON)
+  
+  Prob14Micah <- predict(RFModel14, MicahYear14, type = "prob")
+  colnames(Prob14Micah) <- c("RFOtoSpring", "RFOtoWinter")
+  
+ # Use model to predict unknown samples
+  Prob14Pred <- predict(RFModel14, SaraYear14, type = "prob")
+  colnames(Prob14Pred) <- c("RFOtoSpring", "RFOtoWinter")
+  Assign14Pred <- predict(RFModel14, SaraYear14)
+  
+ ######################################
+ #### Linear Discriminate Analysis ####
+ ######################################
+  
+ # Run LDA
+  LDA2014 <- lda(SEASON ~ A1, data = MicahYear14)
+  LDA2014MicahPred <- predict(LDA2014)
+  LDA2014pred <- predict(LDA2014, newdata = SaraYear14)
+  
+ # Bind all data together
+  df.2014Micah <- cbind(MicahYear14, Prob14Micah, Assign14Micah, LDA2014MicahPred$x, 
+                        LDA2014MicahPred$posterior, LDA2014MicahPred$class)
+  colnames(df.2014Micah)[c(21, 23:25)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  df.2014Sara <- cbind(SaraYear14, Prob14Pred, Assign14Pred, 
+                       LDA2014pred$x, LDA2014pred$posterior, LDA2014pred$class)
+  colnames(df.2014Sara)[c(54, 56:58)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  
+ # Check accuracy of the models
+  RF2014correct <- NULL
+  RF2014incorrect <- NULL
+  for(i in 1:nrow(df.2014Micah)){
+    if(df.2014Micah$SEASON[i] == df.2014Micah$RFOtoAssign[i]){
+      RF2014correct <- c(RF2014correct, as.character(df.2014Micah$SEASON[i]))
+    } else {
+      RF2014incorrect <- c(RF2014incorrect, as.character(df.2014Micah$SEASON[i]))
+    }
+  }
+  100-(length(RF2014incorrect)/length(RF2014correct)*100)
+  
+  LDA2014correct <- NULL
+  LDA2014incorrect <- NULL
+  for(i in 1:nrow(df.2014Micah)){
+    if(df.2014Micah$SEASON[i] == df.2014Micah$LDAAssign[i]){
+      LDA2014correct <- c(LDA2014correct, as.character(df.2014Micah$SEASON[i]))
+    } else {
+      LDA2014incorrect <- c(LDA2014incorrect, as.character(df.2014Micah$SEASON[i]))
+    }
+  }
+  100-(length(LDA2014incorrect)/length(LDA2014correct)*100)
+  
+  
+ # Plot data
+  par(mfrow = c(1,3))
+  # Get sample sizes
+  nrow(MicahYear14[MicahYear14$SEASON == "SPRING",])
+  nrow(MicahYear14[MicahYear14$SEASON == "WINTER",])
+  nrow(SaraYear14)
+  # Random Forest Results
+  boxplot(MicahYear14$A1~MicahYear14$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.5, "n = 2", col = "darkolivegreen4")
+  text(2, 4.3, "n = 16", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~RFOtoSpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2014Micah[df.2014Micah$RFOtoAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~RFOtoSpring, pch = 19, data = df.2014Micah[df.2014Micah$RFOtoAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.82, 4.25, "Micah RF")
+  plot(df.2014Sara$A1~df.2014Sara$RFOtoSpring, pch = 19, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       col = df.2014Sara$RFOtoAssign)
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.84, 4.25, "Sara RF")
+  text(0.84, 4.15, "n = 14")
+  
+  # LDA Results
+  boxplot(MicahYear14$A1~MicahYear14$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 3.5, "n = 2", col = "darkolivegreen4")
+  text(2, 4.3, "n = 16", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~LDASpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2014Micah[df.2014Micah$LDAAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~LDASpring, pch = 19, data = df.2014Micah[df.2014Micah$LDAAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.77, 4.25, "Micah LDA")
+  plot(df.2014Sara$A1~df.2014Sara$LDASpring, pch = 19, xlim = c(0,1), ylim = c(1.0, 4.2),
+       xlab = "Spring Spawner Probability", ylab = "",
+       col = df.2014Sara$LDAAssign)
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.78, 4.25, "Sara LDA")
+  text(0.78, 4.15, "n = 14")
+```
+
+```{r}
+###################
+#### 2015 Data ####
+###################
+  par(mfrow = c(1,3))
+ # Subset data
+  SaraYear15 <- subset(RFUnknownData, subset = RFUnknownData$birthYear == 2015)
+  MicahYear15 <- subset(MicahData, subset = MicahData$birthYear == 2015)
+  
+ #######################
+ #### Random Forest ####
+ #######################
+  
+  #Subset data into training and validation datasets to test how well it works on known data
+  train15 <- sample(nrow(MicahYear15), 0.7*nrow(MicahYear15), replace = FALSE)
+  TrainData15 <- MicahYear15[train15,]
+  ValidData15 <- MicahYear15[-train15,]
+  
+  #Create RFmodel on Training Data
+  RFModel15 <- randomForest(SEASON ~ A1, data = TrainData15, importance = TRUE)
+  
+  #Run RFmodel on the Training Dataset
+  predTrain15 <- predict(RFModel15, TrainData15, type = "class")
+  table(predTrain15, TrainData15$SEASON)
+  
+  #Run RFmodel on the Validation Dataset
+  predValid15 <- predict(RFModel15, ValidData15, type = "class")
+  table(predValid15, ValidData15$SEASON)
+  # 80% accuracy on validation dataset
+  
+  # Run Model from Training Data on full dataset
+  Assign15Micah <- predict(RFModel15, MicahYear15, type = "class")
+  table(Assign15Micah, MicahYear15$SEASON)
+  
+  Prob15Micah <- predict(RFModel15, MicahYear15, type = "prob")
+  colnames(Prob15Micah) <- c("RFOtoSpring", "RFOtoWinter")
+  
+ # Use model to predict unknown samples
+  Prob15Pred <- predict(RFModel15, SaraYear15, type = "prob")
+  colnames(Prob15Pred) <- c("RFOtoSpring", "RFOtoWinter")
+  Assign15Pred <- predict(RFModel15, SaraYear15)
+  
+ ######################################
+ #### Linear Discriminate Analysis ####
+ ######################################
+  
+ # Run LDA
+  LDA2015 <- lda(SEASON ~ A1, data = MicahYear15)
+  LDA2015MicahPred <- predict(LDA2015)
+  LDA2015pred <- predict(LDA2015, newdata = SaraYear15)
+  
+ # Bind all data together
+  df.2015Micah <- cbind(MicahYear15, Prob15Micah, Assign15Micah, LDA2015MicahPred$x, 
+                        LDA2015MicahPred$posterior, LDA2015MicahPred$class)
+  colnames(df.2015Micah)[c(21, 23:25)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  df.2015Sara <- cbind(SaraYear15, Prob15Pred, Assign15Pred, 
+                       LDA2015pred$x, LDA2015pred$posterior, LDA2015pred$class)
+  colnames(df.2015Sara)[c(54, 56:58)] <- c("RFOtoAssign", "LDASpring", "LDAWinter", "LDAAssign")
+  
+ # Check accuracy of the models
+  RF2015correct <- NULL
+  RF2015incorrect <- NULL
+  for(i in 1:nrow(df.2015Micah)){
+    if(df.2015Micah$SEASON[i] == df.2015Micah$RFOtoAssign[i]){
+      RF2015correct <- c(RF2015correct, as.character(df.2015Micah$SEASON[i]))
+    } else {
+      RF2015incorrect <- c(RF2015incorrect, as.character(df.2015Micah$SEASON[i]))
+    }
+  }
+  100-(length(RF2015incorrect)/length(RF2015correct)*100)
+  
+  LDA2015correct <- NULL
+  LDA2015incorrect <- NULL
+  for(i in 1:nrow(df.2015Micah)){
+    if(df.2015Micah$SEASON[i] == df.2015Micah$LDAAssign[i]){
+      LDA2015correct <- c(LDA2015correct, as.character(df.2015Micah$SEASON[i]))
+    } else {
+      LDA2015incorrect <- c(LDA2015incorrect, as.character(df.2015Micah$SEASON[i]))
+    }
+  }
+  100-(length(LDA2015incorrect)/length(LDA2015correct)*100)
+  
+ # Plot data
+  par(mfrow = c(1,3))
+  # Get sample sizes
+  nrow(MicahYear15[MicahYear15$SEASON == "SPRING",])
+  nrow(MicahYear15[MicahYear15$SEASON == "WINTER",])
+  nrow(SaraYear15)
+  
+  # Random Forest Results
+  boxplot(MicahYear15$A1~MicahYear15$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 2.2, "n = 1", col = "darkolivegreen4")
+  text(2, 2.45, "n = 2", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~RFOtoSpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2015Micah[df.2015Micah$RFOtoAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~RFOtoSpring, pch = 19, data = df.2015Micah[df.2015Micah$RFOtoAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.82, 4.25, "Micah RF")
+  plot(A1~RFOtoSpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2015Sara[df.2015Sara$RFOtoAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~RFOtoSpring, pch = 19, data = df.2015Sara[df.2015Sara$RFOtoAssign == "WINTER",], 
+         col = "cornflowerblue")
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.84, 4.25, "Sara RF")
+  text(0.84, 4.15, "n = 4")
+  
+  # LDA Results
+  boxplot(MicahYear15$A1~MicahYear15$SEASON, ylab = "Otolith Diameter", ylim = c(1.0, 4.3), 
+          col = c("darkolivegreen4", "cornflowerblue"), xlab = "Spawning Season")
+  text(1, 2.2, "n = 1", col = "darkolivegreen4")
+  text(2, 2.42, "n = 2", col = "cornflowerblue")
+  text(1.1, 4.35, pos = 2, "Micah")
+  plot(A1~LDASpring, pch = 17, xlim = c(0, 1), ylim = c(1.0, 4.2), 
+       xlab = "Spring Spawner Probability", ylab = "", 
+       data = df.2015Micah[df.2015Micah$LDAAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~LDASpring, pch = 19, data = df.2015Micah[df.2015Micah$LDAAssign == "WINTER",], 
+         col = "cornflowerblue")
+  text(0.77, 4.25, "Micah LDA")
+  plot(A1~LDASpring, pch = 17, xlim = c(0,1), ylim = c(1.0, 4.2),
+       xlab = "Spring Spawner Probability", ylab = "",
+       data = df.2015Sara[df.2015Sara$LDAAssign == "SPRING",], col = "darkolivegreen4")
+  points(A1~LDASpring, pch = 19, data = df.2015Sara[df.2015Sara$LDAAssign == "WINTER",], 
+         col = "cornflowerblue")
+  legend("bottomright", pch = c(17,19), col = c("darkolivegreen4", "cornflowerblue"), 
+         legend = c("Spring", "Winter"), title = "Assignment")
+  text(0.78, 4.25, "Sara LDA")
+  text(0.78, 4.15, "n = 4")
+
+
+```
+
+
+```{r}
+
+df.OtoMaster <- as.data.frame(rbind(df.2011Sara[c(1,41,49,51:58)], df.2012Sara[c(1,41,49,51:58)],
+                                    df.2013Sara[c(1,41,49,51:58)], df.2014Sara[c(1,41,49,51:58)],
+                                    df.2015Sara[c(1,41,49,51:58)]))
+
+write.csv(df.OtoMaster, "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtoAnalysis.csv")
+
+```

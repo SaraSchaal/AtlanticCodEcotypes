@@ -1,0 +1,358 @@
+---
+title: "SpawningAssignment"
+author: "Sara Michele Schaal"
+date: "7/9/2018"
+output: pdf_document
+---
+
+Set working directory - this will not work. Rmd files default the working directory to be where the rmd file is saved. However I want it to be in the parent directory. Cannot get it to read that as the working directory. Even though it prints out that it is set at that working directory.
+
+```{r}
+
+# Load data
+  # Morphometrics + Individual Metadata 
+  masterData <- read.csv("../data/Morphometrics/morphPlusMetadata20180628.csv")
+  colnames(masterData)[2:3] <- c("CollectionDate", "CollectionSite")
+  masterData$CollectionDate <- as.Date(as.character(masterData$CollectionDate), format = ("%Y%m%d"))
+  masterData$WeightTotal <- masterData$WeightTotal*1000
+  masterData$ColorType <- NA
+
+  # Add Red or Olive Based on RGR
+  for(i in 1:nrow(masterData)){
+    if(masterData$RedGreenRatio[i] >= 1.3){
+      masterData$ColorType[i] <- "Red"
+    } else {
+      masterData$ColorType[i] <- "Olive"
+    }
+  }
+
+  # Morphometric Spawning Assignment Data
+  dataAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/SamplingSpawningAssignment.csv")
+  noRed <- subset(masterData, subset = masterData$ColorType != "Red")
+  onlyRed <- subset(masterData, subset = masterData$ColorType == "Red")
+  onlyRed$Spawning <- "Red"
+  noRedAssignSpawn <- data.frame(noRed, dataAssignSpawn$Spawning)
+  colnames(noRedAssignSpawn)[37] <- "Spawning"
+  masterDataAssign <- rbind(noRedAssignSpawn, onlyRed)
+  colnames(masterData)[1] <- "SampleID"
+  
+  
+  # Otolith Spawning Assignment Data
+  otolAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtolithSpawningAssignment.csv")
+  colnames(otolAssignSpawn)[12] <- "OtolSeason"
+  otolAssignSpawn <- subset(otolAssignSpawn, select = -X)
+  
+  all.data.temp <- merge(dataAssignSpawn[, c(20:23)], masterData, by = "SampleID", all = TRUE)
+  all.data <- merge(all.data.temp, otolAssignSpawn, by = "SampleID", all = TRUE)
+```
+
+
+
+```{r}
+
+data.subset <- all.data[, c(1:6, 29:32, 39, 40, 42, 45, 47, 48:50)]
+genomics.Data <- subset(data.subset, subset = Age_SideA > 2 & substr(SampleID, 1, 2) == "17")
+
+write.csv(data.subset, file = "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/allMassBayDataFile.csv")
+
+```
+
+
+
+```{r}
+palette(c("cornflowerblue", "darkolivegreen4", "goldenrod"))
+par(mfrow = c(1,1))
+
+  ## Load Dataframes
+  df.Morph <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/MorphAnalyses.csv")
+
+  df.Oto <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtoAnalysis.csv")
+  
+  ## Merge Dataframes together
+  df.morphOto1 <- merge(df.Morph, df.Oto, by = "SampleID", all = TRUE)
+  df.morphOto <- df.morphOto1[!is.na(df.morphOto1$RFOtoAssign),]
+  head(df.morphOto)
+  dim(df.morphOto)
+
+  ## Add GSI data
+  df.morphOto$WeightTotal <- df.morphOto$WeightTotal*1000
+  df.morphOto$GSI <- (df.morphOto$WeightGonad/df.morphOto$WeightTotal)*100
+  
+  ## Add column with assignment to every model
+  df.morphOto$Group <-  paste(df.morphOto$RFMorphAssignSara,
+                                  df.morphOto$LDAMorphAssign,
+                                  df.morphOto$RFOtoAssign, 
+                                  df.morphOto$LDAAssign)
+
+```
+
+Clustering using Average Method
+
+```{r}
+ 
+# Install Clustering Package
+install.packages("cluster")
+library(cluster)
+  
+#########################
+#### Cluster Average ####
+#########################
+
+  #################
+  #### No GSI ####
+  ################
+
+  ## Cluster four metrics
+  clustersRFLDA <- hclust(dist(df.morphOto[c(3,42,54,50)]), method = "average")
+  ## Plot Dendrogram
+  plot(clustersRFLDA)
+  ## Get individual assignments
+  clusterCutRFLDA3 <- cutree(clustersRFLDA, 3)
+  ## Add clustering assignments to dataframe
+  df.morphOtoRFLDA <- cbind(df.morphOto, clusterCutRFLDA3)
+
+  ## Identify which samples went into which groupings
+  df.morphOtoRFLDA[df.morphOtoRFLDA$clusterCutRFLDA3 == 1, c(1, 5, 47:48, 52, 58)]
+  # 6 individuals that are spring 32 winter winter
+  df.morphOtoRFLDA[df.morphOtoRFLDA$clusterCutRFLDA3 == 2, c(1, 5, 47:48, 52, 58)]
+  # 11 individuals that are spring spawners for morph but winter for oto 8 winter winter
+  df.morphOtoRFLDA[df.morphOtoRFLDA$clusterCutRFLDA3 == 3, c(1, 5, 47:48, 52, 58)]
+  # 1 winter winter 3 winter morph but spring oto 
+
+  ## Subset data needed for plotting
+  df.morphOtoPlot<- df.morphOto[c(5,45,52,56,3,42,50,54)]
+  
+  ## Change levels to be consistent across all four methods
+  levels(df.morphOto$RFMorphAssignSara) <- c("SPRING", "WINTER")
+  levels(df.morphOto$LDAMorphAssign) <- c("SPRING", "WINTER")
+
+  ## Run PCA 
+  assignPCA <- prcomp(df.morphOto[c(3,42,50,54)], scale. = TRUE)
+  summary(assignPCA)
+  # PC1 driven mainly by morph PC2 driven by Oto Diameter
+  
+  ## Add Grouping 
+  df.morphOto[c(1,3,5,42,45,50,52,54,56:57)]
+  
+  ## Plotting
+  install.packages("wesanderson")
+  library("wesanderson")
+
+  # Create vectors for legend names
+  legendnames <- c("SpringMorph SpringRFOto", "SpringMorph WinterOto", 
+                   "SpringRFMorph WinterOto",
+                   "SpringLDAMorph, WinterOto", 
+                   "WinterMorph, SpringRFOto", "Winter")
+  legendnames2 <- c("SpringMorph, WinterOto", "Winter Winter", 
+                    "1 Spring Spring and 1 Winter Winter")
+  
+  ## Set color palette
+  pal <- c(wes_palette("Darjeeling1"), "darkorchid")
+  palette(pal)
+  
+  ## Plot PC1 vs PC2 and color by unique combination of output from 4 models
+  par(xpd=FALSE)
+  plot(assignPCA$x[,1], assignPCA$x[,2], col = as.factor(df.morphOtoPlot$Group),
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoPlot$Group)],
+       xlab = "PC1 44%", ylab = "PC2 38%", bty = "L")
+  par(xpd=TRUE)
+  legend(-0.3,5, col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs PC2 and color by clustering output
+  plot(assignPCA$x[,1], assignPCA$x[,2], col = clusterCutRFLDA3, 
+       pch = c(15, 17, 19)[clusterCutRFLDA3], 
+       xlab = "PC1 44%", ylab = "PC2 38%", bty = "L")
+  legend(-0.3,5, col = pal, legend = legendnames2, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'Average' Grouping")
+  
+  ## Plot PC1 vs A1 Diameter and color by unique combination of output from 4 models
+  plot(assignPCA$x[,1], df.morphOto$A1, col = as.factor(df.morphOtoPlot$Group), 
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoPlot$Group)], 
+       xlab = "PC1 44%", ylab = "A1 Diameter",  bty = "L")
+  legend(-2,4.2, col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs A1 Diameter and color by clustering output
+  plot(assignPCA$x[,1], df.morphOto$A1, col = clusterCutRFLDA3, 
+        pch = c(15,17,19)[clusterCutRFLDA3], 
+       xlab = "PC1 44%", ylab = "A1 Diameter", bty = "L")
+  legend(-2,4, col = pal, legend = legendnames2, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'Average' Grouping")
+  
+ #######################
+ #### INCLUDING GSI ####
+ #######################
+  
+  ## Subset data to only have samples with GSI data
+  df.morphOtoGSI <- df.morphOto[!is.na(df.morphOto$GSI),]
+  
+  ## Create a binary column for GSI
+  for(i in 1:nrow(df.morphOtoGSI)){
+    if(df.morphOtoGSI$GSI[i] > 1){
+      df.morphOtoGSI$GSIbin[i] <- 1
+    } else {
+      df.morphOtoGSI$GSIbin[i] <- 0
+    }
+  }
+  
+  ## Cluster based on 'average' method
+  clustersAvGSI <- hclust(dist(df.morphOtoGSI[c(3,42,54,50,59)]), method = "average")
+  ## Plot Dendrogram
+  plot(clustersAvGSI)
+  ## Get individual assignments
+  clusterCutAvGSI4 <- cutree(clustersAvGSI, 4)
+  ## Add clustering assignments to dataframe
+  df.morphOtoAvGSI <- cbind(df.morphOtoGSI, clusterCutAvGSI4)
+
+  ## Identify which samples went into which groupings
+  df.morphOtoAvGSI[df.morphOtoAvGSI$clusterCutAvGSI4 == 1, c(1, 47:48, 57:59)]
+  # 6 individuals that are spring 32 winter winter
+  df.morphOtoAvGSI[df.morphOtoAvGSI$clusterCutAvGSI4 == 2, c(1, 47:48, 57:59)]
+  # 11 individuals that are spring spawners for morph but winter for oto 8 winter winter
+  df.morphOtoAvGSI[df.morphOtoAvGSI$clusterCutAvGSI4 == 3, c(1, 47:48, 57:59)]
+  # 1 winter winter 3 winter morph but spring oto 
+  df.morphOtoAvGSI[df.morphOtoAvGSI$clusterCutAvGSI4 == 4, c(1, 47:48, 57:59)]
+
+  ## Run PCA 
+  assignGSIPCA <- prcomp(df.morphOtoGSI[c(3,42,50,54,59)], scale. = TRUE)
+  summary(assignGSIPCA)
+  # PC1 driven mainly by morph PC2 driven by Oto Diameter
+  legendnamesGSIAve <- c("SMorph, WOto, noGSI", "WW, SRFMorph, NoGSI", "WW, GSI", "SMorph, W/SOto, GSI")
+  ## Plot
+  ## Plot PC1 vs PC2 and color by unique combination of output from 4 models
+  par(xpd=FALSE)
+  plot(assignGSIPCA$x[,1], assignGSIPCA$x[,2], col = as.factor(df.morphOtoGSI$Group),
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoGSI$Group)],
+       xlab = "PC1 38%", ylab = "PC2 33%", bty = "L")
+  par(xpd=TRUE)
+  legend("topleft", col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs PC2 and color by clustering output
+  plot(assignGSIPCA$x[,1], assignGSIPCA$x[,2], col = clusterCutAvGSI4, 
+       pch = c(15, 17, 19, 6)[clusterCutAvGSI4], 
+       xlab = "PC1 38%", ylab = "PC2 33%", bty = "L")
+  legend("topleft", col = pal, legend = legendnamesGSIAve, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'average' Grouping")
+  
+  ## Plot PC1 vs A1 Diameter and color by unique combination of output from 4 models
+  plot(assignGSIPCA$x[,1], df.morphOtoGSI$A1, col = as.factor(df.morphOtoGSI$Group), 
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoGSI$Group)], 
+       xlab = "PC1 44%", ylab = "A1 Diameter",  bty = "L")
+  legend(-2,4.2, col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs A1 Diameter and color by clustering output
+  plot(assignGSIPCA$x[,1], df.morphOtoGSI$A1, col = clusterCutAvGSI4, 
+        pch = c(15,17,19)[clusterCutAvGSI4], 
+       xlab = "PC1 44%", ylab = "A1 Diameter", bty = "L")
+  legend(-2,4, col = pal, legend = legendnames2, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'Average' Grouping")
+```
+
+
+
+```{r}
+
+#########################
+#### Cluster Ward.D  ####
+#########################
+  
+  #### All Data no GSI ####
+  ## Cluster four metrics
+  clustersWard <- hclust(dist(df.morphOto[c(3,42,54,50)]), method = "ward.D")
+  ## Plot Dendrogram
+  plot(clustersWard, xlab = "HClust Ward D Assignment", main = "Ward Cluster Dendrogram")
+  ## Get individual assignments
+  clusterCutWard4 <- cutree(clustersWard, 4)
+  ## Add clustering assignments to dataframe
+  df.morphOtoWard <- cbind(df.morphOto, clusterCutWard4)
+
+  ## Identify which samples went into which groupings
+  df.morphOtoWard[df.morphOtoWard$clusterCutWard4 == 1, c(1, 5, 47:48, 52, 57)]
+  # 6 individuals that are spring 32 winter winter
+  df.morphOtoWard[df.morphOtoWard$clusterCutWard4 == 2, c(1, 5, 47:48, 52, 57)]
+  # 11 individuals that are spring spawners for morph but winter for oto 8 winter winter
+  df.morphOtoWard[df.morphOtoWard$clusterCutWard4 == 3, c(1, 5, 47:48, 52, 57)]
+  # 1 winter winter 3 winter morph but spring oto 
+  df.morphOtoWard[df.morphOtoWard$clusterCutWard4 == 4, c(1, 5, 47:48, 52, 57)]
+
+  plot(assignPCA$x[,1], assignPCA$x[,2], col = as.factor(df.morphOtoWard$Group),
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoWard$Group)],
+       xlab = "PC1 38%", ylab = "PC2 33%", bty = "L")
+  par(xpd=TRUE)
+  legend("topleft", col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs PC2 and color by clustering output
+  plot(assignPCA$x[,1], assignPCA$x[,2], col = clusterCutWard4, 
+       pch = c(15, 17, 19, 6)[clusterCutWard4], 
+       xlab = "PC1 38%", ylab = "PC2 33%", bty = "L")
+  legend("topleft", col = pal, legend = legendnames2, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'ward.D' Grouping")
+  
+  ## Plot PC1 vs A1 Diameter and color by unique combination of output from 4 models
+  plot(assignPCA$x[,1], df.morphOtoWard$A1, col = as.factor(df.morphOtoWard$Group), 
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoWard$Group)], 
+       xlab = "PC1 44%", ylab = "A1 Diameter",  bty = "L")
+  legend(-2,4.2, col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs A1 Diameter and color by clustering output
+  plot(assignPCA$x[,1], df.morphOtoWard$A1, col = clusterCutWard4, 
+        pch = c(15,17,19)[clusterCutWard4], 
+       xlab = "PC1 44%", ylab = "A1 Diameter", bty = "L")
+  legend(-2,4, col = pal, legend = legendnames2, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'Average' Grouping")
+
+##################
+#### With GSI ####
+##################
+  
+  ## Cluster based on 'ward.D' method
+  clustersWardGSI <- hclust(dist(df.morphOtoGSI[c(3,42,54,50,59)]), method = "ward.D")
+  ## Plot Dendrogram
+  plot(clustersWardGSI)
+  ## Get individual assignments
+  clusterCutWardGSI4 <- cutree(clustersWardGSI, 4)
+  ## Add clustering assignments to dataframe
+  df.morphOtoWardGSI <- cbind(df.morphOtoGSI, clusterCutWardGSI4)
+
+  ## Identify which samples went into which groupings
+  df.morphOtoWardGSI[df.morphOtoWardGSI$clusterCutWardGSI4 == 1, c(1, 47:48, 57:59)]
+  # 6 individuals that are spring 32 winter winter
+  df.morphOtoWardGSI[df.morphOtoWardGSI$clusterCutWardGSI4 == 2, c(1, 47:48, 57:59)]
+  # 11 individuals that are spring spawners for morph but winter for oto 8 winter winter
+  df.morphOtoWardGSI[df.morphOtoWardGSI$clusterCutWardGSI4 == 3, c(1, 47:48, 57:59)]
+  # 1 winter winter 3 winter morph but spring oto 
+  df.morphOtoWardGSI[df.morphOtoWardGSI$clusterCutWardGSI4 == 4, c(1, 47:48, 57:59)]
+
+  ## Run PCA 
+  assignGSIPCA <- prcomp(df.morphOtoGSI[c(3,42,50,54,59)], scale. = TRUE)
+  summary(assignGSIPCA)
+  # PC1 driven mainly by morph PC2 driven by Oto Diameter
+  
+  ## Plot
+  ## Plot PC1 vs PC2 and color by unique combination of output from 4 models
+  par(xpd=FALSE)
+  plot(assignGSIPCA$x[,1], assignGSIPCA$x[,2], col = as.factor(df.morphOtoGSI$Group),
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoGSI$Group)],
+       xlab = "PC1 38%", ylab = "PC2 33%", bty = "L")
+  par(xpd=TRUE)
+  legend("topleft", col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs PC2 and color by clustering output
+  plot(assignGSIPCA$x[,1], assignGSIPCA$x[,2], col = clusterCutWardGSI4, 
+       pch = c(15, 17, 19, 6)[clusterCutWardGSI4], 
+       xlab = "PC1 38%", ylab = "PC2 33%", bty = "L")
+  legend("topleft", col = pal, legend = legendnames2, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'ward.D' Grouping")
+  
+  ## Plot PC1 vs A1 Diameter and color by unique combination of output from 4 models
+  plot(assignGSIPCA$x[,1], df.morphOtoGSI$A1, col = as.factor(df.morphOtoGSI$Group), 
+       pch = c(6, 1, 5, 15, 17, 19)[as.factor(df.morphOtoGSI$Group)], 
+       xlab = "PC1 44%", ylab = "A1 Diameter",  bty = "L")
+  legend(-2,4.2, col = pal, legend = legendnames, pch = c(6, 1, 5, 15, 17, 19), 
+         cex = 0.7, title = "Model Outputs")
+  ## Plot PC1 vs A1 Diameter and color by clustering output
+  plot(assignGSIPCA$x[,1], df.morphOtoGSI$A1, col = clusterCutWardGSI4, 
+        pch = c(15,17,19)[clusterCutWardGSI4], 
+       xlab = "PC1 44%", ylab = "A1 Diameter", bty = "L")
+  legend(-2,4, col = pal, legend = legendnames2, pch = c(15, 17, 19), 
+         cex = 0.7, title = "HClust 'Average' Grouping")
+```

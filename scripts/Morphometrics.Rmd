@@ -1,0 +1,344 @@
+---
+title: "Morphometrics"
+author: "Sara Michele Schaal"
+date: "6/28/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+The following analyses are done to determine the spawning group for samples of unknown origin. I begin by creating a Linear Discriminate Analysis model for a dataset of individuals with known spawning origin. Using that model I then apply it to my dataset of unknown spawning origin to get posterior probabilities of assignment to each group. 
+
+```{r}
+####################################
+###### Data & Package Loading ######
+####################################
+
+  # Set working directory and load packages
+  #setwd("./data/Morphometrics/")
+  #install.packages("MASS")
+  library(MASS)
+
+  # Load unknown data
+  unknown.morph <- read.csv("../data/Morphometrics/morphPlusMetadata20180628.csv")
+  
+  # Load known data
+  known.morph <- read.csv("../data/Morphometrics/GrahamData.csv")
+  
+
+###########################
+#### Data Manipulation ####
+###########################
+  
+  # convert unknown data to mm
+  unknown.morph[,4:26] <- 25.4*unknown.morph[,4:26] 
+  
+  # add column with red or olive for unknown samples
+  unknown.morph$ColorType <- NA
+  for(i in 1:nrow(unknown.morph)){
+    if(unknown.morph$RedGreenRatio[i] >= 1.3){
+      unknown.morph$ColorType[i] <- "Red"
+    } else {
+      unknown.morph$ColorType[i] <- "Olive"
+    }
+  }
+  
+  # convert to cm and take out only the natural log transformed morph data
+  unknown.morphlog <- log(unknown.morph[,4:26])  
+  known.morphlog <- log(known.morph[,c(16:38)]) # already in mm
+  #colnames(known.morphlog)[23] <- "TotalLength"
+
+  # remove data from landmark 11 - excludes gut fullness from affecting results
+  unknown.morphlog <- unknown.morphlog[,c("TotalLength", "D1", "D2", "D3", "D4", "D5", 
+                                          "D6", "D7", "D8", "D10", "D13", "D14", "D16", 
+                                          "D17", "D18", "D19", "D21", "D22")]
+  known.morphlog <- known.morphlog[,c( "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", 
+                                       "D10", "D13", "D14", "D16", "D17", "D18", "D19", 
+                                       "D21", "D22")] 
+```
+ 
+# Perform Statistical Analysis on Known Data
+```{r}
+#################
+#### Run PCA ####
+#################
+  # Principle Components Analysis to Account for Total Length of Individuals
+  pca.known <- prcomp(known.morphlog, scale. = TRUE)
+  pca.known.noScale <- prcomp(known.morphlog)
+  summary(pca.known)
+  max(pca.known$x[,1])
+  min(pca.known$x[,1])
+  # Plot PCA
+  plot(pca.known$x[,1], pca.known$x[,2])
+  screeplot(pca.known)
+  hist(pca.known$x[,1])
+  
+#############################################
+#### Regress PC1 on Log Transformed Data ####
+#############################################
+  # Because PC1 corresponds to variance in morphology due to total length of the 
+  # fish we can regressing PC1 on our data to account for that variance in downstream 
+  # analyses
+  
+  # for loop to regress PC1 onto log transformed data and pull out residuals
+  regress.known <- matrix(nrow = nrow(pca.known$x), ncol = ncol(pca.known$x))
+  for(i in 1:ncol(pca.known$x)){
+    regress.known[,i] <- lm(pca.known$x[,1]~known.morphlog[,i])$residuals
+  }
+  
+  # Create dataframe with Spawning Season and Residuals of Regressed Data for DFA
+  df.knowndata <- data.frame(known.morph$Season, regress.known)
+  
+##############################################
+#### Perform Linear Discriminate Analysis ####
+##############################################
+  # Run DFA
+  LDAknown.results <- lda(known.morph.Season ~ ., data = df.knowndata)
+  LDAknown.predict <- predict(LDAknown.results)
+  str(LDAknown.predict)
+  
+  # Plot DFA 
+  plot.data <- data.frame(LDAknown.predict$x, df.knowndata$known.morph.Season)
+  colnames(plot.data)[3] <- "Season"
+  plot(plot.data$LD1[plot.data$Season == "Red"], 
+       plot.data$LD2[plot.data$Season == "Red"], col = "firebrick", 
+       ylim = c(-4,4), xlim = c(-8, 7), pch = 19,
+       ylab = "DF2", xlab = "DF1", main = "Linear Discriminate Analysis of Cod Ecotype Morphology")
+  points(plot.data$LD1[plot.data$Season == "Spring"], 
+         plot.data$LD2[plot.data$Season == "Spring"], col = "goldenrod",
+         pch = 17)
+  points(plot.data$LD1[plot.data$Season == "Winter"],
+         plot.data$LD2[plot.data$Season == "Winter"], col = "cornflowerblue",
+         pch = 15)
+  legend("topleft", legend = c("Red", "Spring", "Winter"), 
+         pch = c(19, 17, 15), cex = 0.75,
+         col = c("firebrick", "goldenrod", "cornflowerblue"))
+  
+  # LD1: D13 D14 D8 D7 
+  # LD2: D22 D13 D8 D4
+```
+
+\newpage
+#Results from SPSS 
+###Essentially the same as R just has an inverted sign for DF2 for some reason...haven't figured that out yet
+```{r}
+SPSS.data <- read.csv("/Users/saraschaal/Desktop/GrahamMorph/GrahamSPSSData.csv")
+SPSS.LDA <- read.csv("~/Desktop/GrahamMorph/GrahamDataLDA.csv")
+SPSS.Log <- SPSS.data[,grep("Ln", names(SPSS.data))] # Same as R
+regress.known.SPSS <- SPSS.data[,grep("RES", names(SPSS.data))] # Same as R when PCA is NOT scaled
+
+head(SPSS.LDA$LDA1)
+head(SPSS.LDA$LDA2)
+head(LDAknown.predict$x[,1])
+head(LDAknown.predict$x[,2]) 
+# sign is flipped and numbers are SLIGHTLY different from SPSS
+# R and SPSS may calculate the LDA slightly differently, 
+# but doesn't have large impacts on the results
+
+plot(SPSS.LDA$LDA1[SPSS.LDA$Season == "Spring"], 
+     SPSS.LDA$LDA2[SPSS.LDA$Season == "Spring"], col = "darkolivegreen4",
+     pch = 17, xlim = c(-8, 5), ylim = c(-3.1, 4),
+     xlab = "DF1", ylab = "DF2", main = "SPSS")
+points(SPSS.LDA$LDA1[SPSS.LDA$Season == "Winter"], 
+     SPSS.LDA$LDA2[SPSS.LDA$Season == "Winter"], col = "cornflowerblue",
+     pch = 19)
+points(SPSS.LDA$LDA1[SPSS.LDA$Season == "Red"], 
+     SPSS.LDA$LDA2[SPSS.LDA$Season == "Red"], col = "firebrick",
+     pch = 15)
+legend("topleft", legend = c("Red", "Spring", "Winter"), 
+         pch = c(15, 17, 19), cex = 0.75,
+         col = c("firebrick", "darkolivegreen4", "cornflowerblue"))
+```
+
+\newpage
+# Remove Red cod and reanalyze
+The red cod in the known dataset did not have any length measurements so I had to exclude total length from that analysis. Here I removed red cod from both the known dataset and the unknown dataset to specifiy just spring or winter spawners in my data. This results in a single LD axis.
+```{r}
+################################################
+#### Run LDA for only Spring and Winter cod ####
+################################################
+
+  # remove Red cod data 
+  known.noRed <- known.morph[known.morph$Season != "Red", ]
+  unknown.noRed <- unknown.morph[unknown.morph$ColorType != "Red", ]
+  unknown.lognoRed <- log(unknown.noRed[,c("TotalLength", "D1", "D2", "D3", "D4", "D5", 
+                                           "D6", "D7", "D8", "D10", "D13", "D14", "D16", 
+                                           "D17", "D18", "D19", "D21", "D22")])
+  colnames(unknown.lognoRed)[1] <- "D23" 
+  unknown.lognoRed <- unknown.lognoRed[,c(2:18, 1)]
+  known.noRed$Season <- factor(known.noRed$Season)
+  known.lognoRed <- log(known.noRed[,c(16:23, 25, 28:29, 31:34, 36:38)])
+  
+# Run a Principle Components Analysis on both datasets
+  pca.known.noRed <- prcomp(known.lognoRed, scale. = TRUE)
+  summary(pca.known.noRed)
+  pca.unknown.noRed<- prcomp(unknown.lognoRed, scale. = TRUE)
+  
+# Plot PCA 
+  plot(pca.known.noRed$x[,1], pca.known.noRed$x[,2])
+  screeplot(pca.known.noRed)
+  hist(pca.known.noRed$x[,1])
+  
+# for loop to regress PC1 onto log transformed data and pull out residuals
+  #Grahams Data
+  regress.known.noRed <- matrix(nrow = nrow(pca.known.noRed$x), 
+                               ncol = ncol(pca.known.noRed$x))
+  for(i in 1:ncol(pca.known.noRed$x)){
+    regress.known.noRed[,i] <- lm(pca.known.noRed$x[,1]~known.lognoRed[,i])$residuals
+  }
+  
+  #Sara Data
+  regress.unknown.noRed <- matrix(nrow = nrow(pca.unknown.noRed$x), 
+                                  ncol = ncol(pca.unknown.noRed$x))
+  for(i in 1:ncol(pca.unknown.noRed$x)){
+    regress.unknown.noRed[,i] <- lm(pca.unknown.noRed$x[,1]~unknown.lognoRed[,i])$residuals
+  }
+  
+# Create dataframe with data for Linear Discriminate Function Analysis
+  df.known.noRed <- data.frame(known.noRed$Season, regress.known.noRed)
+  
+# Run DFA
+  LDA.known.noRed <- lda(known.noRed.Season ~ ., data = df.known.noRed)
+  colnames(regress.unknown.noRed) <- c("X1", "X2", "X3", "X4", "X5", "X6", 
+                                       "X7", "X8", "X9", "X10", "X11", "X12", 
+                                       "X13", "X14", "X15", "X16", "X17", "X18")
+  regress.unknown.noRed <- as.data.frame(regress.unknown.noRed)
+  LDApredict.known.noRed <- predict(LDA.known.noRed)
+  plot(LDA.known.noRed)
+  str(LDApredict.known.noRed)
+  
+  # Evaluate Performance of LDA on Known Data
+  df.prediction <- as.data.frame(cbind(as.character(df.known.noRed$known.noRed.Season),
+                                       as.character(LDApredict.known.noRed$class),
+                                       LDApredict.known.noRed$posterior, LDApredict.known.noRed$x))
+  colnames(df.prediction)[1:2] <- c("Known", "Predicted")
+  
+  incorrect <- NULL
+  for(i in 1:nrow(df.prediction)){
+    if(df.prediction[i,1] != df.prediction[i,2]){
+      incorrect <- as.data.frame(rbind(incorrect, df.prediction[i,]))
+    }
+  }
+  incorrect
+  (nrow(regress.known.noRed) - nrow(incorrect))/nrow(regress.known.noRed)*100
+  
+  # Run DFA on my samples to determine which spawning groups they belong to
+  LDApredictnoRed <- predict(LDA.known.noRed, newdata = regress.unknown.noRed)
+  
+  #Create dataframe for plotting
+  df.finalunknown <- cbind(regress.unknown.noRed, LDApredictnoRed$posterior, LDApredictnoRed$x)
+  
+  # Based on posterior probabilities determine which spawning group samples are from
+  df.finalunknown$Spawning <- NA
+  for(i in 1:nrow(df.finalunknown)){
+    if(df.finalunknown$Spring[i] > 0.5){
+     df.finalunknown$Spawning[i] <- "Spring"
+    } else {
+     df.finalunknown$Spawning[i] <- "Winter"
+    }
+  }
+  
+  df.finalunknown <- data.frame(df.finalunknown, unknown.noRed$Sample)
+  colnames(df.finalunknown)[19:23] <- c("LDAMorphSpring", "LDAMorphWinter", "LD1Morph","LDAMorphAssign","SampleID")
+  write.csv(df.finalunknown, "SamplingSpawningAssignment.csv")
+  
+  
+  colnames(df.known.noRed)[1] <- "SEASON"
+  #Subset data into training and validation datasets to test how well it works on known data
+  trainMorph <- sample(nrow(df.known.noRed), 0.7*nrow(df.known.noRed), replace = FALSE)
+  TrainMorphData <- df.known.noRed[trainMorph,]
+  ValidMorphData <- df.known.noRed[-trainMorph,]
+ 
+  #Create RFmodel on Training Data
+  RFMorphModel <- randomForest(SEASON ~ ., data = TrainMorphData, importance = TRUE)
+  
+  #Run RFmodel on the Training Dataset
+  predTrainMorph <- predict(RFMorphModel, TrainMorphData, type = "class")
+  table(predTrainMorph, TrainMorphData$SEASON)
+  
+  #Run RFmodel on the Validation Dataset
+  predValidMorph <- predict(RFMorphModel, ValidMorphData, type = "class")
+  table(predValidMorph, ValidMorphData$SEASON)
+  # 86% accuracy on validation dataset
+  
+  # Run Model from Training Data on full dataset
+  RFAssignMorph <- predict(RFMorphModel, df.known.noRed, type = "class")
+  RFMorphPred <- predict(RFMorphModel, df.known.noRed, type = "prob")
+  table(RFAssignMorph, df.known.noRed$SEASON)
+  # 96% on full dataset
+  
+  df.RFMorphGraham <- as.data.frame(cbind(df.known.noRed, RFMorphPred, RFAssignMorph))
+  
+  # Check accuracy of the models
+  RFMorphcorrect <- NULL
+  RFMorphincorrect <- NULL
+  for(i in 1:nrow(df.RFMorphGraham)){
+    if(df.RFMorphGraham$SEASON[i] == df.RFMorphGraham$RFAssignMorph[i]){
+      RFMorphcorrect <- c(RFMorphcorrect, as.character(df.RFMorphGraham$SEASON[i]))
+    } else {
+      RFMorphincorrect <- c(RFMorphincorrect, as.character(df.RFMorphGraham$SEASON[i]))
+    }
+  }
+  100-(length(RFMorphincorrect)/length(RFMorphcorrect)*100)
+  
+ # Use model to predict unknown samples
+  RFMorphSara <- predict(RFMorphModel, regress.unknown.noRed, type = "prob")
+  colnames(RFMorphSara) <- c("RFMorphSpring", "RFMorphWinter")
+  RFMorphAssignSara <- as.character(predict(RFMorphModel, regress.unknown.noRed))
+  
+  df.RFMorphSara <- as.data.frame(cbind(RFMorphSara, RFMorphAssignSara, unknown.noRed,
+                                        df.finalunknown[19:23]))
+  
+  write.csv(df.RFMorphSara, "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/MorphAnalyses.csv")
+  
+## Plot
+  plot(df.RFMorphSara$RFMorphSpring[df.RFMorphSara$RFMorphSpring > 0.5], 
+       df.RFMorphSara$RFMorphWinter[df.RFMorphSara$RFMorphWinter < 0.5], 
+       col = "darkolivegreen4", pch = 19, ylim = c(0,1), xlim = c(0,1),
+       xlab = "Probability of Spring Spawner", ylab = "Probability of Winter Spawner",
+       main = "Random Forest Posterior Probabilities")
+  points(df.RFMorphSara$RFMorphSpring[df.RFMorphSara$RFMorphSpring < 0.5], 
+       df.RFMorphSara$RFMorphWinter[df.RFMorphSara$RFMorphWinter > 0.5], 
+       col = "cornflowerblue", pch = 19, ylim = c(0,1), xlim = c(0,1),
+       xlab = "Probability of Spring Spawner", ylab = "Probability of Winter Spawner")
+  legend("topright", legend = c("Winter", "Spring"), 
+         col = c("cornflowerblue", "darkolivegreen4"), pch = 19)
+  
+  hist(df.RFMorphSara$RFMorphSpring[df.RFMorphSara$RFMorphSpring > 0.5], breaks = 10, 
+       col = "darkolivegreen4", xlim = c(0,1), ylim = c(0, 20), 
+       xlab = "Probability of Spring Spawner", 
+       main = "RF Probability of Assignment to Spring Spawning Cod")
+  hist(df.RFMorphSara$RFMorphSpring[df.RFMorphSara$RFMorphSpring < 0.5], breaks = 10, 
+       col = "cornflowerblue", add = TRUE)
+  legend("topright", legend = c("Winter", "Spring"), 
+         fill = c("cornflowerblue", "darkolivegreen4"))
+  
+  
+  pdf(file = "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/figures/PosteriorProbabilityOfAssignment.pdf")
+  par(mfrow = c(1,1))
+  plot(df.finalunknown$LDAMorphSpring[df.finalunknown$LDAMorphSpring > 0.5], 
+       df.finalunknown$LDAMorphWinter[df.finalunknown$LDAMorphWinter < 0.5], 
+       col = "darkolivegreen4", pch = 19, ylim = c(0, 1), xlim = c(0,1),
+       xlab = "Probability of Spring Spawner", ylab = "Probability of Winter Spawner",
+       main = "LDA Posterior Probabilities")
+  points(df.finalunknown$LDAMorphSpring[df.finalunknown$LDAMorphSpring < 0.5], 
+         df.finalunknown$LDAMorphWinter[df.finalunknown$LDAMorphWinter > 0.5], 
+         col = "cornflowerblue", pch = 19)
+  legend("topright", legend = c("Winter", "Spring"), 
+         col = c("cornflowerblue", "darkolivegreen4"), pch = 19)
+  #dev.off()
+  
+pdf(file = "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/figures/SpawningAssignment.pdf")
+
+  hist(df.finalunknown$LDAMorphSpring[df.finalunknown$LDAMorphSpring > 0.5], breaks = 10, 
+       col = "darkolivegreen4", xlim = c(0,1), ylim = c(0, 20), 
+       xlab = "Probability of Spring Spawner", 
+       main = "LDA Probability of Assignment to Spring Spawning Cod")
+  hist(df.finalunknown$LDAMorphSpring[df.finalunknown$LDAMorphSpring < 0.5], breaks = 10, 
+       col = "cornflowerblue", add = TRUE)
+  legend("topright", legend = c("Winter", "Spring"), 
+         fill = c("cornflowerblue", "darkolivegreen4"))
+  #dev.off()
+  
+```
+
