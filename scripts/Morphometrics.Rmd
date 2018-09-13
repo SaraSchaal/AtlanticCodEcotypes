@@ -14,8 +14,6 @@ The following analyses are done to determine the spawning group for samples of u
 ###### Data & Package Loading ######
 ####################################
 
-  # Set working directory and load packages
-  #setwd("./data/Morphometrics/")
   #install.packages("MASS")
   library(MASS)
 
@@ -157,7 +155,7 @@ The red cod in the known dataset did not have any length measurements so I had t
 ################################################
 #### Run LDA for only Spring and Winter cod ####
 ################################################
-
+  library(randomForest)
   # remove Red cod data 
   known.noRed <- known.morph[known.morph$Season != "Red", ]
   unknown.noRed <- unknown.morph[unknown.morph$ColorType != "Red", ]
@@ -240,7 +238,7 @@ The red cod in the known dataset did not have any length measurements so I had t
   
   df.finalunknown <- data.frame(df.finalunknown, unknown.noRed$Sample)
   colnames(df.finalunknown)[19:23] <- c("LDAMorphSpring", "LDAMorphWinter", "LD1Morph","LDAMorphAssign","SampleID")
-  write.csv(df.finalunknown, "SamplingSpawningAssignment.csv")
+  write.csv(df.finalunknown, "../data/Morphometrics/SamplingSpawningAssignment.csv")
   
   
   colnames(df.known.noRed)[1] <- "SEASON"
@@ -289,7 +287,7 @@ The red cod in the known dataset did not have any length measurements so I had t
   df.RFMorphSara <- as.data.frame(cbind(RFMorphSara, RFMorphAssignSara, unknown.noRed,
                                         df.finalunknown[19:23]))
   
-  write.csv(df.RFMorphSara, "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/MorphAnalyses.csv")
+  write.csv(df.RFMorphSara, "../data/Morphometrics/MorphAnalyses.csv")
   
 ## Plot
   plot(df.RFMorphSara$RFMorphSpring[df.RFMorphSara$RFMorphSpring > 0.5], 
@@ -314,7 +312,7 @@ The red cod in the known dataset did not have any length measurements so I had t
          fill = c("cornflowerblue", "darkolivegreen4"))
   
   
-  pdf(file = "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/figures/PosteriorProbabilityOfAssignment.pdf")
+  pdf(file = "../figures/PosteriorProbabilityOfAssignment.pdf")
   par(mfrow = c(1,1))
   plot(df.finalunknown$LDAMorphSpring[df.finalunknown$LDAMorphSpring > 0.5], 
        df.finalunknown$LDAMorphWinter[df.finalunknown$LDAMorphWinter < 0.5], 
@@ -328,7 +326,7 @@ The red cod in the known dataset did not have any length measurements so I had t
          col = c("cornflowerblue", "darkolivegreen4"), pch = 19)
   #dev.off()
   
-pdf(file = "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/figures/SpawningAssignment.pdf")
+pdf(file = "../figures/SpawningAssignment.pdf")
 
   hist(df.finalunknown$LDAMorphSpring[df.finalunknown$LDAMorphSpring > 0.5], breaks = 10, 
        col = "darkolivegreen4", xlim = c(0,1), ylim = c(0, 20), 
