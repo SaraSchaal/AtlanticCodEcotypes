@@ -1,3 +1,3 @@
 # AtlanticCodEcotypes
 
-The files have been updated to a new repository. Please see CodEcotypes Repository. 20180913
+This repository is home to all data and analyses of Atlantic cod ecotype evolution in the Gulf of Maine.
