@@ -1,0 +1,7 @@
+20190508 - SMS
+
+* new graphs have been added
+* got through 25 more morphometric images
+* added PCA graph to compare to LDA 
+  - PCA doesn't use prior information to bin samples
+  - LDA takes known groups and finds axes that account for the highest level of variation between groups
