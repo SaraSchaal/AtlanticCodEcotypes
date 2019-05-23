@@ -10,7 +10,7 @@ Set working directory - this will not work. Rmd files default the working direct
 ```{r}
 # Load data
   # Morphometrics + Individual Metadata 
-  masterData <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/morphPlusMetadata20180628.csv")
+  masterData <- read.csv("../data/Morphometrics/morphPlusMetadata20180628.csv")
   colnames(masterData)[2:3] <- c("CollectionDate", "CollectionSite")
   masterData$CollectionDate <- as.Date(as.character(masterData$CollectionDate), format = ("%Y%m%d"))
   masterData$WeightTotal <- masterData$WeightTotal*1000
@@ -26,18 +26,18 @@ Set working directory - this will not work. Rmd files default the working direct
   }
 
   # Morphometric Spawning Assignment Data
-  dataAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/SamplingSpawningAssignment.csv")
+  dataAssignSpawn <- read.csv("../data/Morphometrics/SamplingSpawningAssignment.csv")
   noRed <- subset(masterData, subset = masterData$ColorType != "Red")
   onlyRed <- subset(masterData, subset = masterData$ColorType == "Red")
   onlyRed$Spawning <- "Red"
-  noRedAssignSpawn <- data.frame(noRed, dataAssignSpawn$Spawning)
+  noRedAssignSpawn <- data.frame(noRed, dataAssignSpawn$LDAMorphAssign)
   colnames(noRedAssignSpawn)[37] <- "Spawning"
   masterDataAssign <- rbind(noRedAssignSpawn, onlyRed)
   colnames(masterData)[1] <- "SampleID"
   
   
   # Otolith Spawning Assignment Data
-  otolAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtolithSpawningAssignment.csv")
+  otolAssignSpawn <- read.csv("../data/Otoliths/OtolithSpawningAssignment.csv")
   colnames(otolAssignSpawn)[12] <- "OtolSeason"
   otolAssignSpawn <- subset(otolAssignSpawn, select = -X)
   
@@ -65,7 +65,7 @@ for(i in 1:nrow(all.data)){
 df.unknown[, c(2:4, 48:49)] 
 (nrow(all.data)-nrow(df.unknown))/nrow(all.data)*100
 
-write.csv(df.unknown, "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/unknownIndv.csv")
+write.csv(df.unknown, "../data/unknownIndv.csv")
 
 ```
 
@@ -186,7 +186,20 @@ masterDataAssign$GonSomIndex <- (masterDataAssign$WeightGonad/masterDataAssign$W
   
   
 ## Subset for just known winter ##
+  ClustAve <- read.csv("../data/clusteringAverageGSI.csv")
+  colnames(masterDataAssign)[1] <- "SampleID"
   
+  clustData <- merge(ClustAve[, c(2,61)], masterDataAssign, by = "SampleID")
+  clustData <- clustData[!clustData$SampleID == "17_290_Gm",]
+
+  ClustwinterMean <- aggregate(GonSomIndex~CollectionDate, 
+                            data = clustData[clustData$clusterCutAvGSI4 == 2 | clustData$clusterCutAvGSI4 == 3 | clustData$clusterCutAvGSI4 == 4,], 
+                            FUN = mean)
+  ClustwinterSE <- aggregate(GonSomIndex~CollectionDate, 
+                          data = clustData[clustData$clusterCutAvGSI4 == 2 | clustData$clusterCutAvGSI4 == 3 | clustData$clusterCutAvGSI4 == 4,], 
+                          FUN = SE)
+  ClustwinterMean$CIlow <- ClustwinterMean$GonSomIndex - ClustwinterSE$GonSomIndex
+  ClustwinterMean$CIup <- ClustwinterMean$GonSomIndex + ClustwinterSE$GonSomIndex
   
 ## Plots ##
   # one figure means as points plot
@@ -201,13 +214,13 @@ masterDataAssign$GonSomIndex <- (masterDataAssign$WeightGonad/masterDataAssign$W
   arrows(x0 = GSIspringMean$CollectionDate, x1 = GSIspringMean$CollectionDate, 
          y0 = GSIspringMean$CIlow, y1 = GSIspringMean$CIup, 
          angle = 90, code = 3, len = 0.1)
-  points(GonSomIndex~CollectionDate, data = GSIwinterMean, pch = 15, 
+  points(GonSomIndex~CollectionDate, data = ClustwinterMean, pch = 15, 
          col = "cornflowerblue")
-  arrows(x0 = GSIwinterMean$CollectionDate, x1 = GSIwinterMean$CollectionDate, 
-         y0 = GSIwinterMean$CIlow, y1 = GSIwinterMean$CIup, 
+  arrows(x0 = ClustwinterMean$CollectionDate, x1 = ClustwinterMean$CollectionDate, 
+         y0 = ClustwinterMean$CIlow, y1 = ClustwinterMean$CIup, 
          angle = 90, code = 3, len = 0.1)
-  legend("topleft", legend = c("Red", "Spring", "Winter"), pch = c(19,17,15), 
-         col = c("firebrick", "darkolivegreen4", "cornflowerblue"))
+  legend("topleft", legend = c("Red", "Winter"), pch = c(19,15), 
+         col = c("firebrick", "cornflowerblue"))
   
   # two separate boxplots
   par(mfrow = c(1,2))
@@ -335,7 +348,7 @@ masterDataAssign$GillRakerCountMean <- (masterDataAssign$LeftGillRaker + masterD
 # Catch Depth
 ```{r}
 
-catchDepth <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/catchdepth.csv", header = FALSE)
+catchDepth <- read.csv("../data/catchdepth.csv", header = FALSE)
 colnames(catchDepth) <- c("Ecotype", "Depth", "Sample", "RGR")
 catchDepth <- catchDepth[!is.na(catchDepth$Depth),]
 
@@ -354,6 +367,6 @@ catchDepth <- catchDepth[!catchDepth$Sample == "17_301_Gm",]
 catchDepth$ColorType <- as.factor(catchDepth$ColorType) 
 catchDepth$ColorType <- factor(catchDepth$ColorType,levels(catchDepth$ColorType)[c(2,1)])
 par(bty = "l")
-boxplot(Depth~ColorType, ylim = rev(range(catchDepth$Depth)), data = catchDepth, col = c("firebrick", "lightblue"), ylab = "Catch Depth (m)")
+boxplot(Depth~ColorType, ylim = rev(range(catchDepth$Depth)), data = catchDepth, col = c("firebrick", "cornflowerblue"), ylab = "Catch Depth (m)")
 
 ```

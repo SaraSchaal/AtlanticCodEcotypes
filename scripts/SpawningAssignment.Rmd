@@ -27,22 +27,23 @@ Set working directory - this will not work. Rmd files default the working direct
   }
 
   # Morphometric Spawning Assignment Data
-  dataAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/SamplingSpawningAssignment.csv")
+  dataAssignSpawn <- read.csv("../data/Morphometrics/SamplingSpawningAssignment.csv")
   noRed <- subset(masterData, subset = masterData$ColorType != "Red")
   onlyRed <- subset(masterData, subset = masterData$ColorType == "Red")
   onlyRed$Spawning <- "Red"
-  noRedAssignSpawn <- data.frame(noRed, dataAssignSpawn$Spawning)
+  noRedAssignSpawn <- data.frame(noRed, dataAssignSpawn$LDAMorphAssign)
   colnames(noRedAssignSpawn)[37] <- "Spawning"
   masterDataAssign <- rbind(noRedAssignSpawn, onlyRed)
   colnames(masterData)[1] <- "SampleID"
   
   
   # Otolith Spawning Assignment Data
-  otolAssignSpawn <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtolithSpawningAssignment.csv")
+  otolAssignSpawn <- read.csv("../data/Otoliths/OtolithSpawningAssignment.csv")
   colnames(otolAssignSpawn)[12] <- "OtolSeason"
   otolAssignSpawn <- subset(otolAssignSpawn, select = -X)
   
-  all.data.temp <- merge(dataAssignSpawn[, c(20:23)], masterData, by = "SampleID", all = TRUE)
+  all.data.temp <- merge(dataAssignSpawn[, c(20:24)], masterData, by = "SampleID", all = TRUE)
+
   all.data <- merge(all.data.temp, otolAssignSpawn, by = "SampleID", all = TRUE)
 ```
 
@@ -50,10 +51,10 @@ Set working directory - this will not work. Rmd files default the working direct
 
 ```{r}
 
-data.subset <- all.data[, c(1:6, 29:32, 39, 40, 42, 45, 47, 48:50)]
+data.subset <- all.data[, c(1:7, 30:34, 40:50)]
 genomics.Data <- subset(data.subset, subset = Age_SideA > 2 & substr(SampleID, 1, 2) == "17")
 
-write.csv(data.subset, file = "/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/allMassBayDataFile.csv")
+#write.csv(data.subset, file = "./data/Otoliths/allMassBayDataFile2.csv")
 
 ```
 
@@ -64,9 +65,9 @@ palette(c("cornflowerblue", "darkolivegreen4", "goldenrod"))
 par(mfrow = c(1,1))
 
   ## Load Dataframes
-  df.Morph <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Morphometrics/MorphAnalyses.csv")
+  df.Morph <- read.csv("../data/Morphometrics/MorphAnalyses.csv")
 
-  df.Oto <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/CodEcotypes/AtlanticCodEcotypes/data/Otoliths/OtoAnalysis.csv")
+  df.Oto <- read.csv("../data/Otoliths/OtoAnalysis.csv")
   
   ## Merge Dataframes together
   df.morphOto1 <- merge(df.Morph, df.Oto, by = "SampleID", all = TRUE)
@@ -91,7 +92,7 @@ Clustering using Average Method
 ```{r}
  
 # Install Clustering Package
-install.packages("cluster")
+#install.packages("cluster")
 library(cluster)
   
 #########################
@@ -135,7 +136,7 @@ library(cluster)
   df.morphOto[c(1,3,5,42,45,50,52,54,56:57)]
   
   ## Plotting
-  install.packages("wesanderson")
+  #install.packages("wesanderson")
   library("wesanderson")
 
   # Create vectors for legend names
@@ -212,6 +213,7 @@ library(cluster)
   # 1 winter winter 3 winter morph but spring oto 
   df.morphOtoAvGSI[df.morphOtoAvGSI$clusterCutAvGSI4 == 4, c(1, 47:48, 57:59)]
 
+  write.csv(df.morphOtoAvGSI, "../data/clusteringAverageGSI.csv")
   ## Run PCA 
   assignGSIPCA <- prcomp(df.morphOtoGSI[c(3,42,50,54,59)], scale. = TRUE)
   summary(assignGSIPCA)

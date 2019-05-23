@@ -18,10 +18,10 @@ The following analyses are done to determine the spawning group for samples of u
   library(MASS)
 
   # Load unknown data
-  unknown.morph <- read.csv("../data/Morphometrics/morphPlusMetadata20180628.csv")
+  unknown.morph <- read.csv("/Users/saraschaal/Documents/Northeastern/LotterhosLab/Research/Data/AtlanticCodEcotypes/data/Morphometrics/morphPlusMetadata20180628.csv")
   
   # Load known data
-  known.morph <- read.csv("../data/Morphometrics/GrahamData.csv")
+  known.morph <- read.csv("./data/GrahamData.csv")
   
 
 ###########################
@@ -104,12 +104,14 @@ The following analyses are done to determine the spawning group for samples of u
        ylab = "DF2", xlab = "DF1", main = "Linear Discriminate Analysis of Cod Ecotype Morphology")
   points(plot.data$LD1[plot.data$Season == "Spring"], 
          plot.data$LD2[plot.data$Season == "Spring"], col = "goldenrod",
-         pch = 17)
+         pch = 2)
   points(plot.data$LD1[plot.data$Season == "Winter"],
          plot.data$LD2[plot.data$Season == "Winter"], col = "cornflowerblue",
          pch = 15)
+  
+  
   legend("topleft", legend = c("Red", "Spring", "Winter"), 
-         pch = c(19, 17, 15), cex = 0.75,
+         pch = c(19, 2, 15), cex = 0.75,
          col = c("firebrick", "goldenrod", "cornflowerblue"))
   
   # LD1: D13 D14 D8 D7 

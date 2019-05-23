@@ -6,13 +6,11 @@ output: pdf_document
 ---
 
 ```{r}
-#Set working directory
-setwd("./LandmarkAnalysis")
-pracData <- read.csv("./Landmark_Results_Full.csv")
+pracData <- read.csv("../data/LandmarkAnalysis/Landmark_Results_Full.csv")
 pracData <- pracData[, c(1,2,7,8)]
 colnames(pracData) <- c("SampleID", "Landmark", "X", "Y")
 
-install.packages("tidyr")
+#install.packages("tidyr")
 library("tidyr")
 library("reshape2")
 pracData$Landmark <- as.factor(pracData$Landmark)
