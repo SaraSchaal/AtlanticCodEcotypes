@@ -1,0 +1,7 @@
+20190521 - Otolith Micromill Troubleshooting Notes
+
+* Otoliths are consistently breaking when we mill 
+* There otoliths do not or break a small bit
+* TESTED: set one of my otoliths in their epoxy but it still broke
+* NEXT STEP: Zach is setting and cutting a fresh otolith of theirs to see if it is the otoliths or the machine post fixing
+* MY NEXT STEP: Setting one of their otoliths in my epoxy using the same method I have been using and setting another one in epoxy that has the bubbles removed via vacuum (Ries Lab)
