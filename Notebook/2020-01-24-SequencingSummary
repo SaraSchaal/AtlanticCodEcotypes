@@ -1,0 +1,6 @@
+Edited output file from sequencer with number of samples. 
+The last column shows the extra Mb we have over the 15x expection. 
+Any negative values (highlighted in yellow) mean we didn’t get enough coverage to have at least 15x for the number of 
+samples with that index combination. There are only three of those and assuming even coverage across samples within indexes 
+we have a minimum of ~13x coverage for all the samples. We also got an extra ~200,000 Mb of data off the sequencer than what 
+we were quoted (table on bottom of document).
